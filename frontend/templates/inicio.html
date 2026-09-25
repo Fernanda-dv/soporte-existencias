@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soporte Inventario - Maipú</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/inicio.css' %}">
+</head>
+<body class="dashboard-body">
+
+    <header class="navbar-header">
+        <div class="navbar-container">
+            <div class="brand-box">
+                <div class="brand-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                <div class="brand-text">
+                    <h1 class="system-title">SOPORTE INVENTARIO</h1>
+                    <span class="system-subtitle">Municipalidad de Maipú</span>
+                </div>
+            </div>
+
+            <div class="user-profile-box">
+                <div class="user-info">
+                    <span class="user-label">Técnico Responsable</span>
+                    <strong class="user-name"><i class="fa-solid fa-circle-user"></i> {{ user.get_full_name|default:user.username|upper }}</strong>
+                </div>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
+                </form>
+            </div>
+        </div>
+        <div class="brand-line">
+            <span class="line-fucsia"></span>
+            <span class="line-calipso"></span>
+            <span class="line-amarillo"></span>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <section class="welcome-banner">
+            <h2>¡Hola, {{ user.first_name|default:user.username }}!</h2>
+            <p>Selecciona una opción para comenzar:</p>
+        </section>
+
+        <section class="options-grid">
+            <!-- 1. Ingresar Equipo -->
+            <a href="{% url 'ingresar_equipo' %}" class="action-card card-primary">
+                <div class="card-icon-wrapper color-calipso"><i class="fa-solid fa-laptop-medical"></i></div>
+                <div class="card-content"><h3>Ingresar Equipo</h3></div>
+                <div class="card-footer-action"><span>Ir a formulario</span> <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+
+            <!-- 2. Ingresar Impresora -->
+            <a href="{% url 'ingresar_impresora' %}" class="action-card card-primary">
+                <div class="card-icon-wrapper color-calipso"><i class="fa-solid fa-print"></i></div>
+                <div class="card-content"><h3>Agregar Impresora</h3></div>
+                <div class="card-footer-action"><span>Ir a formulario</span> <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+
+            <!-- 3. Ver Datos -->
+            <a href="{% url 'ver_equipos' %}" class="action-card card-secondary">
+                <div class="card-icon-wrapper color-fucsia"><i class="fa-solid fa-table-list"></i></div>
+                <div class="card-content"><h3>Ver Datos de Equipos e Impresoras</h3></div>
+                <div class="card-footer-action"><span>Ver inventario</span> <i class="fa-solid fa-arrow-right"></i></div>
+            </a>
+        </section>
+    </main>
+</body>
+</html>

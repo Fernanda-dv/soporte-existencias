@@ -1,0 +1,316 @@
+:root {
+    --color-azul-marino: #10174A;
+    --color-calipso: #33CCCC;
+    --color-fucsia: #E60380;
+    --color-amarillo: #FFB71B;
+    --color-blanco: #FFFFFF;
+    --color-gris-fondo: #F4F7FA;
+    --color-gris-tarjeta: #FFFFFF;
+    --color-gris-borde: #E2E8F0;
+    --color-texto-oscuro: #1A202C;
+    --color-texto-mutado: #64748B;
+    --font-principal: 'Rubik', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body.dashboard-body {
+    background-color: var(--color-gris-fondo);
+    font-family: var(--font-principal);
+    color: var(--color-texto-oscuro);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 1. Header y Navbar */
+.navbar-header {
+    background-color: var(--color-azul-marino);
+    color: var(--color-blanco);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(16, 23, 74, 0.15);
+}
+
+.navbar-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.brand-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.brand-icon {
+    width: 44px;
+    height: 44px;
+    background-color: rgba(51, 204, 204, 0.18);
+    color: var(--color-calipso);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+}
+
+.system-title {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--color-blanco);
+}
+
+.system-subtitle {
+    font-size: 12px;
+    color: var(--color-calipso);
+    display: block;
+}
+
+/* Sección Usuario Logueado */
+.user-profile-box {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.user-info {
+    text-align: right;
+}
+
+.user-label {
+    display: block;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+}
+
+.user-name {
+    font-size: 14px;
+    color: var(--color-blanco);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.user-name i {
+    color: var(--color-calipso);
+}
+
+.btn-logout {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-blanco);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-family: var(--font-principal);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.25s ease;
+}
+
+.btn-logout:hover {
+    background-color: var(--color-fucsia);
+    border-color: var(--color-fucsia);
+}
+
+/* Banda Tri-Color Municipal */
+.brand-line {
+    display: flex;
+    height: 4px;
+    width: 100%;
+}
+
+.brand-line .line-fucsia { background-color: var(--color-fucsia); flex: 1; }
+.brand-line .line-calipso { background-color: var(--color-calipso); flex: 1; }
+.brand-line .line-amarillo { background-color: var(--color-amarillo); flex: 1; }
+
+/* 2. Contenedor Principal */
+.main-container {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 35px 20px;
+    flex: 1;
+}
+
+.welcome-banner {
+    margin-bottom: 30px;
+}
+
+.welcome-banner h2 {
+    font-size: 26px;
+    color: var(--color-azul-marino);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.welcome-banner p {
+    color: var(--color-texto-mutado);
+    font-size: 15px;
+}
+
+/* 3. Grid de Opciones */
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.action-card {
+    background-color: var(--color-blanco);
+    border-radius: 16px;
+    padding: 30px 25px;
+    text-decoration: none;
+    color: var(--color-texto-oscuro);
+    border: 2px solid var(--color-gris-borde);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 12px rgba(16, 23, 74, 0.03);
+}
+
+.action-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 28px rgba(16, 23, 74, 0.12);
+}
+
+.card-primary:hover {
+    border-color: var(--color-calipso);
+}
+
+.card-secondary:hover {
+    border-color: var(--color-fucsia);
+}
+
+.card-badge {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 12px;
+    background-color: var(--color-gris-fondo);
+    color: var(--color-texto-mutado);
+}
+
+.card-icon-wrapper {
+    width: 65px;
+    height: 65px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    margin-bottom: 20px;
+}
+
+.color-calipso {
+    background-color: rgba(51, 204, 204, 0.15);
+    color: #00A3A3;
+}
+
+.color-fucsia {
+    background-color: rgba(230, 3, 128, 0.12);
+    color: var(--color-fucsia);
+}
+
+.card-content h3 {
+    font-size: 20px;
+    color: var(--color-azul-marino);
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.card-content p {
+    font-size: 14px;
+    color: var(--color-texto-mutado);
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.card-footer-action {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--color-azul-marino);
+    transition: gap 0.2s ease;
+}
+
+.action-card:hover .card-footer-action {
+    gap: 14px;
+    color: var(--color-fucsia);
+}
+
+/* 4. Footer */
+.main-footer {
+    background-color: var(--color-azul-marino);
+    color: var(--color-blanco);
+    padding: 25px 20px;
+    text-align: center;
+    margin-top: 40px;
+}
+
+.footer-logo {
+    height: 38px;
+    width: auto;
+    margin-bottom: 8px;
+    filter: brightness(0) invert(1);
+}
+
+.main-footer p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* 5. Adaptabilidad Celular y Tablet (Responsive) */
+@media (max-width: 768px) {
+    .navbar-container {
+        padding: 12px 16px;
+    }
+
+    .user-info {
+        display: none; /* Oculta etiqueta en móviles para ahorrar espacio */
+    }
+
+    .system-title {
+        font-size: 16px;
+    }
+
+    .welcome-banner h2 {
+        font-size: 22px;
+    }
+
+    .options-grid {
+        grid-template-columns: 1fr; /* 1 tarjeta por fila en celular */
+    }
+
+    .action-card {
+        padding: 24px 20px;
+    }
+}
+
+.is-hidden {
+    display: none !important;
+}

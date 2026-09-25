@@ -1,0 +1,1006 @@
+:root {
+    --color-azul-marino: #10174A;
+    --color-calipso: #33CCCC;
+    --color-fucsia: #E60380;
+    --color-amarillo: #FFB71B;
+    --color-blanco: #FFFFFF;
+    --color-gris-fondo: #F4F7FA;
+    --color-gris-borde: #CBD5E1;
+    --color-texto-oscuro: #1E293B;
+    --color-texto-mutado: #64748B;
+    --font-principal: 'Rubik', sans-serif;
+}
+
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+body.form-body {
+    background-color: var(--color-gris-fondo);
+    font-family: var(--font-principal);
+    color: var(--color-texto-oscuro);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ============================================================
+   1. HEADER & NAVBAR
+   ============================================================ */
+
+.navbar-header {
+    background-color: var(--color-azul-marino);
+    color: var(--color-blanco);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(16, 23, 74, 0.15);
+}
+
+
+.navbar-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+.brand-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+
+.btn-back-nav {
+    width: 38px;
+    height: 38px;
+    background-color: rgba(255, 255, 255, 0.12);
+    color: var(--color-calipso);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+
+.btn-back-nav:hover {
+    background-color: var(--color-calipso);
+    color: var(--color-azul-marino);
+}
+
+
+.system-title {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+
+.system-subtitle {
+    font-size: 11px;
+    color: var(--color-calipso);
+    display: block;
+}
+
+
+.user-profile-box {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+
+.user-info {
+    text-align: right;
+}
+
+
+.user-label {
+    display: block;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    text-transform: uppercase;
+}
+
+
+.user-name {
+    font-size: 13px;
+    color: var(--color-blanco);
+    font-weight: 600;
+}
+
+
+.btn-logout {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-blanco);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-family: var(--font-principal);
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+
+.btn-logout:hover {
+    background-color: var(--color-fucsia);
+    border-color: var(--color-fucsia);
+}
+
+
+/* ============================================================
+   2. BANDA TRI-COLOR
+   ============================================================ */
+
+.brand-line {
+    display: flex;
+    height: 4px;
+    width: 100%;
+}
+
+
+.brand-line .line-fucsia {
+    background-color: var(--color-fucsia);
+    flex: 1;
+}
+
+
+.brand-line .line-calipso {
+    background-color: var(--color-calipso);
+    flex: 1;
+}
+
+
+.brand-line .line-amarillo {
+    background-color: var(--color-amarillo);
+    flex: 1;
+}
+
+
+/* ============================================================
+   3. CONTENEDOR DEL FORMULARIO
+   ============================================================ */
+
+.main-container {
+    max-width: 950px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 25px 15px 50px 15px;
+    flex: 1;
+}
+
+
+.form-header-title {
+    margin-bottom: 20px;
+}
+
+
+.form-header-title h2 {
+    font-size: 22px;
+    color: var(--color-azul-marino);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+.form-header-title p {
+    font-size: 13px;
+    color: var(--color-texto-mutado);
+    margin-top: 4px;
+}
+
+
+/* ============================================================
+   4. TARJETAS
+   ============================================================ */
+
+.inventory-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+.form-card {
+    background-color: var(--color-blanco);
+    border-radius: 12px;
+    border: 1px solid var(--color-gris-borde);
+    padding: 22px 24px;
+    box-shadow: 0 2px 8px rgba(16, 23, 74, 0.04);
+}
+
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+    border-bottom: 2px solid var(--color-gris-fondo);
+    color: var(--color-azul-marino);
+}
+
+
+.card-header i {
+    font-size: 18px;
+    color: var(--color-fucsia);
+}
+
+
+.card-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   5. GRID
+   ============================================================ */
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(250px, 1fr)
+    );
+    gap: 16px;
+}
+
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+
+.form-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--color-azul-marino);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+
+/* ============================================================
+   6. INPUTS
+   ============================================================ */
+
+.input-text,
+.select-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--color-gris-borde);
+    border-radius: 8px;
+    font-family: var(--font-principal);
+    font-size: 14px;
+    color: var(--color-texto-oscuro);
+    background-color: var(--color-blanco);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+
+.uppercase-input {
+    text-transform: uppercase;
+}
+
+
+.input-text:focus,
+.select-input:focus {
+    border-color: var(--color-calipso);
+    box-shadow: 0 0 0 3px rgba(
+        51,
+        204,
+        204,
+        0.18
+    );
+}
+
+
+/* ============================================================
+   7. CAMPO N° SERIE / CÓDIGO DE BARRAS
+   ============================================================ */
+
+.input-barcode-wrapper {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+
+.input-barcode-wrapper .input-text {
+    flex: 1;
+    min-width: 0;
+}
+
+
+/* Botón Escanear */
+
+.btn-scan-barcode {
+    border: none;
+    background-color: var(--color-azul-marino);
+    color: var(--color-blanco);
+    padding: 0 16px;
+    border-radius: 8px;
+    font-family: var(--font-principal);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+
+.btn-scan-barcode:hover {
+    background-color: var(--color-fucsia);
+    transform: translateY(-1px);
+}
+
+
+.btn-scan-barcode:active {
+    transform: translateY(0);
+}
+
+
+.btn-scan-barcode i {
+    font-size: 15px;
+}
+
+
+/* Ayuda debajo del campo */
+
+.input-help {
+    font-size: 11px;
+    color: var(--color-texto-mutado);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    line-height: 1.4;
+}
+
+
+.input-help i {
+    color: var(--color-calipso);
+}
+
+
+/* ============================================================
+   8. MODAL DEL ESCÁNER
+   ============================================================ */
+
+.barcode-modal {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(
+        15,
+        23,
+        42,
+        0.82
+    );
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    z-index: 9999;
+}
+
+
+.barcode-modal.active {
+    display: flex;
+}
+
+
+/* Bloquear scroll mientras está abierta la cámara */
+
+body.scanner-open {
+    overflow: hidden;
+}
+
+
+/* Contenedor principal */
+
+.barcode-modal-content {
+    width: 100%;
+    max-width: 560px;
+
+    max-height: 95vh;
+
+    overflow-y: auto;
+
+    background-color: var(--color-blanco);
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 20px 60px rgba(
+            0,
+            0,
+            0,
+            0.30
+        );
+
+    animation: scannerModalIn 0.2s ease-out;
+}
+
+
+@keyframes scannerModalIn {
+
+    from {
+        opacity: 0;
+        transform: translateY(15px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+}
+
+
+/* ============================================================
+   9. CABECERA MODAL
+   ============================================================ */
+
+.barcode-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 18px 20px;
+
+    border-bottom: 1px solid var(--color-gris-borde);
+}
+
+
+.barcode-modal-header h3 {
+    color: var(--color-azul-marino);
+
+    font-size: 17px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.barcode-modal-header h3 i {
+    color: var(--color-fucsia);
+}
+
+
+.barcode-modal-header p {
+    margin-top: 4px;
+
+    color: var(--color-texto-mutado);
+
+    font-size: 11px;
+}
+
+
+.btn-close-scanner {
+    width: 36px;
+    height: 36px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background-color: var(--color-gris-fondo);
+
+    color: var(--color-texto-mutado);
+
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition: all 0.2s ease;
+}
+
+
+.btn-close-scanner:hover {
+    background-color: var(--color-fucsia);
+    color: var(--color-blanco);
+}
+
+
+/* ============================================================
+   10. CONTENEDOR DE CÁMARA
+   ============================================================ */
+
+.barcode-reader-container {
+    position: relative;
+
+    width: 100%;
+
+    background-color: #000;
+
+    min-height: 320px;
+
+    overflow: hidden;
+}
+
+
+#barcode-reader {
+    width: 100%;
+}
+
+
+/*
+ * Ajustamos elementos internos generados por html5-qrcode
+ */
+
+#barcode-reader video {
+    width: 100% !important;
+
+    height: auto !important;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+
+/*
+ * Ocultamos algunos elementos que no necesitamos
+ * del lector predeterminado.
+ */
+
+#barcode-reader__dashboard {
+    display: none !important;
+}
+
+
+#barcode-reader__dashboard_section_swaplink {
+    display: none !important;
+}
+
+
+/* ============================================================
+   11. CARGANDO CÁMARA
+   ============================================================ */
+
+.scanner-loading {
+    position: absolute;
+
+    inset: 0;
+
+    background-color: rgba(
+        0,
+        0,
+        0,
+        0.60
+    );
+
+    color: var(--color-blanco);
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 12px;
+
+    font-size: 13px;
+
+    z-index: 5;
+}
+
+
+.scanner-loading i {
+    font-size: 28px;
+
+    color: var(--color-calipso);
+}
+
+
+/* ============================================================
+   12. ESTADO DEL ESCÁNER
+   ============================================================ */
+
+.scanner-status {
+    padding: 12px 18px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    color: var(--color-texto-mutado);
+
+    background-color: var(--color-gris-fondo);
+
+    text-align: center;
+}
+
+
+.scanner-status i {
+    color: var(--color-calipso);
+}
+
+
+.scanner-status.scanner-success {
+    color: #15803D;
+
+    background-color: #F0FDF4;
+}
+
+
+.scanner-status.scanner-success i {
+    color: #16A34A;
+}
+
+
+.scanner-status.scanner-error {
+    color: #B91C1C;
+
+    background-color: #FEF2F2;
+}
+
+
+.scanner-status.scanner-error i {
+    color: #DC2626;
+}
+
+
+/* ============================================================
+   13. BOTONES DEL MODAL
+   ============================================================ */
+
+.barcode-modal-actions {
+    padding: 15px 20px;
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    border-top: 1px solid var(--color-gris-borde);
+}
+
+
+.scanner-cancel-button {
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   14. SUB-TARJETAS MONITORES
+   ============================================================ */
+
+.sub-card-monitor {
+    background-color: rgba(
+        51,
+        204,
+        204,
+        0.06
+    );
+
+    border: 1px dashed var(--color-calipso);
+
+    border-radius: 8px;
+
+    padding: 16px;
+
+    margin-top: 14px;
+}
+
+
+.sub-card-monitor h4 {
+    font-size: 13px;
+
+    color: var(--color-azul-marino);
+
+    margin-bottom: 12px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+}
+
+
+.checkbox-group {
+    justify-content: flex-end;
+
+    padding-top: 20px;
+}
+
+
+.checkbox-label {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    color: var(--color-azul-marino);
+
+    cursor: pointer;
+}
+
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+
+    height: 18px;
+
+    accent-color: var(--color-fucsia);
+
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   15. BARRA DE BOTONES
+   ============================================================ */
+
+.form-actions-bar {
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 12px;
+
+    margin-top: 10px;
+}
+
+
+.btn-primary {
+    background-color: var(--color-azul-marino);
+
+    color: var(--color-blanco);
+
+    border: none;
+
+    padding: 12px 24px;
+
+    border-radius: 25px;
+
+    font-family: var(--font-principal);
+
+    font-weight: 700;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    transition: all 0.25s ease;
+
+    box-shadow:
+        0 4px 10px rgba(
+            16,
+            23,
+            74,
+            0.15
+        );
+}
+
+
+.btn-primary:hover {
+    background-color: var(--color-fucsia);
+
+    box-shadow:
+        0 6px 14px rgba(
+            230,
+            3,
+            128,
+            0.3
+        );
+}
+
+
+.btn-secondary {
+    background-color: var(--color-blanco);
+
+    color: var(--color-texto-mutado);
+
+    border: 1.5px solid var(--color-gris-borde);
+
+    padding: 12px 20px;
+
+    border-radius: 25px;
+
+    font-family: var(--font-principal);
+
+    font-weight: 600;
+
+    font-size: 14px;
+
+    text-decoration: none;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    transition: all 0.2s ease;
+}
+
+
+.btn-secondary:hover {
+    background-color: #E2E8F0;
+
+    color: var(--color-texto-oscuro);
+}
+
+
+/* ============================================================
+   16. TABLETS Y CELULARES
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+    .user-info {
+        display: none;
+    }
+
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .form-actions-bar {
+        flex-direction: column-reverse;
+    }
+
+
+    .btn-primary,
+    .btn-secondary {
+        width: 100%;
+
+        justify-content: center;
+    }
+
+
+    /*
+     * En teléfonos hacemos que el campo y el botón
+     * puedan ocupar todo el ancho.
+     */
+
+    .input-barcode-wrapper {
+        flex-direction: column;
+    }
+
+
+    .input-barcode-wrapper .input-text {
+        width: 100%;
+    }
+
+
+    .btn-scan-barcode {
+        min-height: 44px;
+
+        width: 100%;
+    }
+
+
+    .barcode-modal {
+        padding: 0;
+    }
+
+
+    .barcode-modal-content {
+        max-width: none;
+
+        width: 100%;
+
+        height: 100%;
+
+        max-height: 100vh;
+
+        border-radius: 0;
+    }
+
+
+    .barcode-reader-container {
+        min-height: 55vh;
+    }
+
+
+    .barcode-modal-header {
+        padding: 15px;
+    }
+
+
+    .barcode-modal-actions {
+        padding: 15px;
+    }
+
+}
+
+
+/* ============================================================
+   17. TELÉFONOS PEQUEÑOS
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+    .navbar-container {
+        padding: 10px 12px;
+    }
+
+
+    .system-title {
+        font-size: 15px;
+    }
+
+
+    .system-subtitle {
+        font-size: 10px;
+    }
+
+
+    .main-container {
+        padding: 18px 10px 35px;
+    }
+    .form-card {
+        padding: 18px 15px;
+    }
+    .form-header-title h2 {
+        font-size: 19px;
+    }
+    .barcode-modal-header h3 {
+        font-size: 15px;
+    }
+    .barcode-reader-container {
+        min-height: 50vh;
+    }
+
+}

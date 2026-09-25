@@ -1,0 +1,284 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Equipos - Soporte Inventario</title>
+
+    <!-- Tipografía Oficial Rubik y FontAwesome -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS Tabla -->
+    <link rel="stylesheet" href="{% static 'css/tabla.css' %}">
+</head>
+<body class="table-body">
+
+    <!-- Navbar Superior Institucional -->
+    <header class="navbar-header">
+        <div class="navbar-container">
+            <div class="brand-box">
+                <a href="{% url 'inicio' %}" class="btn-back-nav" title="Volver al Inicio">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div class="brand-text">
+                    <h1 class="system-title">SOPORTE INVENTARIO</h1>
+                    <span class="system-subtitle">Municipalidad de Maipú</span>
+                </div>
+            </div>
+
+            <div class="user-profile-box">
+                <div class="user-info">
+                    <span class="user-label">Técnico Responsable</span>
+                    <strong class="user-name">
+                        <i class="fa-solid fa-circle-user"></i> 
+                        {{ user.get_full_name|default:user.username|upper }}
+                    </strong>
+                </div>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-logout" title="Cerrar Sesión">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span class="logout-text">Salir</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="brand-line">
+            <span class="line-fucsia"></span>
+            <span class="line-calipso"></span>
+            <span class="line-amarillo"></span>
+        </div>
+    </header>
+
+    <!-- Contenido Principal -->
+    <main class="main-container">
+        
+        <div class="table-header-title">
+            <h2><i class="fa-solid fa-table-list"></i> Inventario de Equipos e Impresoras</h2>
+            <p>Consulte la información, aplique filtros de búsqueda o exporte a Excel y CSV.</p>
+        </div>
+
+        <!-- 1. BARRA DE HERRAMIENTAS: BÚSQUEDA, FILTROS Y EXPORTACIONES (EQUIPOS) -->
+        <section class="toolbar-card">
+            <form method="get" class="filter-form">
+                
+                <!-- Buscador General -->
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" name="q" value="{{ query_busqueda }}" placeholder="Buscar por Funcionario, N° Serie, N° Inventario o Depto..." class="input-search">
+                </div>
+
+                <!-- Filtro por Técnico -->
+                <div class="filter-toggle-box">
+                    <label class="filter-label">Ver Registros de:</label>
+                    <select name="tecnico" class="select-filter" onchange="this.form.submit()">
+                        <option value="todos" {% if filtro_tecnico == 'todos' %}selected{% endif %}>Todos los Técnicos</option>
+                        <option value="mio" {% if filtro_tecnico == 'mio' %}selected{% endif %}>Mis Ingresos ({{ user.username }})</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-filter">Filtrar</button>
+            </form>
+
+            <!-- Botones de Exportación -->
+            <div class="export-buttons-group">
+                <a href="{% url 'exportar_excel' %}?tecnico={{ filtro_tecnico }}&q={{ query_busqueda }}" class="btn-export excel" title="Exportar a Excel">
+                    <i class="fa-solid fa-file-excel"></i> Exportar Excel
+                </a>
+                <a href="{% url 'exportar_csv' %}?tecnico={{ filtro_tecnico }}&q={{ query_busqueda }}" class="btn-export csv" title="Exportar a CSV">
+                    <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                </a>
+            </div>
+        </section>
+
+        <!-- 2. TABLA DE EQUIPOS -->
+        <div class="sub-table-title">
+            <h3><i class="fa-solid fa-desktop"></i> Equipos registrados</h3>
+        </div>
+
+        <section class="table-responsive-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Funcionario</th>
+                        <th>Dirección</th>
+                        <th>Departamento</th>
+                        <th>Anexo</th>
+                        <th>Cargo</th>
+                        <th>Tipo Equipo</th>
+                        <th>N° Serie</th>
+                        <th>N° Inventario</th>
+                        <th>RAM</th>
+                        <th>Disco</th>
+                        <th>Procesador</th>
+                        <th>S.O.</th>
+                        <th>Monitor</th>
+                        <th>Impresora</th>
+                        <th>Fecha Creación</th>
+                        <th>Técnico</th>
+                        {% if es_admin %}
+                            <th class="text-center">Acciones</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for eq in equipos %}
+                    <tr>
+                        <td class="font-bold uppercase-text">{{ eq.funcionario.nombre }}</td>
+                        <td>{{ eq.funcionario.direccion.nombre }}</td>
+                        <td>{{ eq.funcionario.departamento.nombre }}</td>
+                        <td><span class="badge badge-anexo">{{ eq.funcionario.anexo }}</span></td>
+                        <td>{{ eq.funcionario.cargo.nombre }}</td>
+                        <td><strong class="color-azul">{{ eq.tipo.nombre }}</strong></td>
+                        <td>
+                            {% if eq.numero_serie %}
+                                <code>{{ eq.numero_serie }}</code>
+                            {% else %}
+                                <span class="badge badge-disabled">No aplica</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if eq.numero_inventario %}
+                                <code>{{ eq.numero_inventario }}</code>
+                            {% else %}
+                                <span class="badge badge-disabled">No aplica</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge badge-tech">{{ eq.ram.tipo }}</span></td>
+                        <td><span class="badge badge-tech">{{ eq.disco.tipo }}</span></td>
+                        <td>{{ eq.procesador.nombre }}</td>
+                        <td>{{ eq.sistema_operativo.tipo }}</td>
+                        
+                        <!-- Monitor -->
+                        <td>
+                            {% if eq.tiene_monitor %}
+                                <div class="device-detail">
+                                    <span class="badge badge-success">Sí ({{ eq.monitores.count }})</span>
+                                    <small>
+                                        {% for m in eq.monitores.all %}
+                                            P{{ m.pantalla_numero }}: {{ m.pulgadas.tipo }} {% if m.hdmi %}(HDMI){% endif %}{% if not forloop.last %}<br>{% endif %}
+                                        {% endfor %}
+                                    </small>
+                                </div>
+                            {% else %}
+                                <span class="badge badge-disabled">No</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Impresora Asociada -->
+                        <td>
+                            {% if eq.tiene_impresora %}
+                                <div class="device-detail">
+                                    <span class="badge badge-success">Sí</span>
+                                    <small>{{ eq.tipo_impresora.nombre }}</small>
+                                </div>
+                            {% else %}
+                                <span class="badge badge-disabled">No</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-nowrap">{{ eq.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        <td class="font-medium color-fucsia">{{ eq.tecnico.get_full_name|default:eq.tecnico.username }}</td>
+                        
+                        <!-- Acciones (Solo para Administradores) -->
+                        {% if es_admin %}
+                            <td class="text-center">
+                                <a href="{% url 'editar_equipo' eq.id %}" class="btn-action-edit" title="Editar Equipo">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="17" class="empty-table-msg">
+                            <i class="fa-solid fa-box-open"></i>
+                            <p>No se encontraron equipos registrados bajo este criterio.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 3. BARRA DE HERRAMIENTAS CON ESPACIADO PARA IMPRESORAS -->
+        <section class="toolbar-card" style="margin-top: 45px;">
+            <form method="get" class="filter-form">
+                
+                <!-- Buscador General -->
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" name="q" value="{{ query_busqueda }}" placeholder="Buscar por Departamento, Tipo de Impresora, Dirección o Estado..." class="input-search">
+                </div>
+
+                <!-- Filtro por Técnico -->
+                <div class="filter-toggle-box">
+                    <label class="filter-label">Ver Registros de:</label>
+                    <select name="tecnico" class="select-filter" onchange="this.form.submit()">
+                        <option value="todos" {% if filtro_tecnico == 'todos' %}selected{% endif %}>Todos los Técnicos</option>
+                        <option value="mio" {% if filtro_tecnico == 'mio' %}selected{% endif %}>Mis Ingresos ({{ user.username }})</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-filter">Filtrar</button>
+            </form>
+
+            <!-- Botones de Exportación de Impresoras -->
+            <div class="export-buttons-group">
+                <a href="{% url 'exportar_impresoras_excel' %}?tecnico={{ filtro_tecnico }}&q={{ query_busqueda }}" class="btn-export excel" title="Exportar a Excel">
+                    <i class="fa-solid fa-file-excel"></i> Exportar Excel
+                </a>
+                <a href="{% url 'exportar_impresoras_csv' %}?tecnico={{ filtro_tecnico }}&q={{ query_busqueda }}" class="btn-export csv" title="Exportar a CSV">
+                    <i class="fa-solid fa-file-csv"></i> Exportar CSV
+                </a>
+            </div>
+        </section>
+
+        <!-- 4. TABLA DE IMPRESORAS -->
+        <div class="sub-table-title" style="margin-top: 20px;">
+            <h3><i class="fa-solid fa-print"></i> Impresoras registradas</h3>
+        </div>
+
+        <section class="table-responsive-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Dirección</th>
+                        <th>Departamento</th>
+                        <th>Tipo de Impresora</th>
+                        <th>Estado</th>
+                        <th>Fecha Creación</th>
+                        <th>Técnico</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for imp in impresoras %}
+                    <tr>
+                        <td class="font-bold">{{ imp.direccion.nombre }}</td>
+                        <td>{{ imp.departamento.nombre }}</td>
+                        <td><strong class="color-azul">{{ imp.tipo_impresora.nombre }}</strong></td>
+                        <td><span class="badge badge-success">{{ imp.estado.nombre }}</span></td>
+                        <td class="text-nowrap">{{ imp.fecha_creacion|date:"d/m/Y H:i" }}</td>
+                        <td class="font-medium color-fucsia">{{ imp.tecnico.get_full_name|default:imp.tecnico.username }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="empty-table-msg">
+                            <i class="fa-solid fa-print"></i>
+                            <p>No se encontraron impresoras registradas bajo este criterio.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </main>
+
+    <!-- JS Tabla -->
+    <script src="{% static 'js/tabla.js' %}"></script>
+</body>
+</html>

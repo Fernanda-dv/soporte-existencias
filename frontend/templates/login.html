@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soporte Inventario</title>
+
+    <!-- Tipografía Oficial Rubik y FontAwesome -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS del Sistema de Inventario -->
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body class="login-body">
+
+    <div class="login-wrapper">
+
+        <!-- Banda Tri-color Institucional -->
+        <div class="brand-line">
+            <span class="line-fucsia"></span>
+            <span class="line-calipso"></span>
+            <span class="line-amarillo"></span>
+        </div>
+
+        <!-- Tarjeta Principal de Inicio de Sesión -->
+        <div class="login-card">
+            
+            <div class="login-card-header">
+                <div class="brand-icon-box">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                </div>
+                <h1 class="login-title">SOPORTE INVENTARIO</h1>
+                <p class="login-subtitle">Departamento de Soporte</p>
+            </div>
+
+            <!-- Mensajes de Error de Django (Si existen) -->
+            {% if form.errors %}
+                <div class="alert-error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>Usuario o contraseña incorrectos. Por favor, intente nuevamente.</span>
+                </div>
+            {% endif %}
+
+            <!-- Formulario Django -->
+            <form method="post" class="login-form" id="inventory-login-form">
+                {% csrf_token %}
+                <!-- Campo Usuario -->
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">Usuario</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        {{ form.username }}
+                    </div>
+                </div>
+                <!-- Campo Contraseña -->
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">Contraseña</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        {{ form.password }}
+                        <button type="button" class="toggle-password-btn" id="toggle-password" aria-label="Mostrar u ocultar contraseña">
+                            <i class="fa-solid fa-eye" id="toggle-password-icon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Botón de Envío -->
+                <button type="submit" class="btn-submit">
+                    <span>Ingresar</span>
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                </button>
+            </form>
+
+            <!-- Pie de la Tarjeta con Identidad Municipal -->
+            <div class="login-card-footer">
+                <img src="https://www.municipalidadmaipu.cl/img/maipu-logo-blanco.7e5cb3ca.png" alt="Municipalidad de Maipú" class="municipal-logo">
+            </div>
+        </div>
+    </div>
+
+    <!-- JS de Interactividad -->
+    <script src="{% static 'js/login.js' %}"></script>
+</body>
+</html>
