@@ -44,6 +44,11 @@ class Equipo(models.Model):
     tecnico = models.ForeignKey(Tecnico, on_delete=models.PROTECT, related_name='equipos_registrados')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        db_table = 'registro_equipos'
+        verbose_name = 'Registro de equipo'
+        verbose_name_plural = 'Registros de equipos'
+
 class Monitor(models.Model):
     equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE, related_name='monitores')
     pantalla_numero = models.PositiveSmallIntegerField(default=1)
@@ -57,3 +62,8 @@ class ImpresoraRegistro(models.Model):
     estado = models.ForeignKey(EstadoImpresora, on_delete=models.PROTECT)
     tecnico = models.ForeignKey(Tecnico, on_delete=models.PROTECT, related_name='impresoras_registradas')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'registro_impresoras'
+        verbose_name = 'Registro de impresora'
+        verbose_name_plural = 'Registros de impresoras'
