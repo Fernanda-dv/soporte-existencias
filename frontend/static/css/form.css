@@ -1004,3 +1004,18 @@ body.scanner-open {
     }
 
 }
+/* Mensajes del servidor (errores de validación) */
+.messages-container {
+    margin-bottom: 16px;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FCA5A5;
+    margin-bottom: 8px;
+}
