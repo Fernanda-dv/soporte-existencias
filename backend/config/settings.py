@@ -38,6 +38,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -144,3 +145,11 @@ AUTH_USER_MODEL = "usuarios.Tecnico"
 
 LOGIN_REDIRECT_URL = 'inicio'
 LOGOUT_REDIRECT_URL = 'login'
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Soporte Existencias",
+    "site_header": "Soporte Existencias",
+    "site_brand": "Soporte Existencias",
+    "site_logo": None,
+    "welcome_sign": "Bienvenido a Soporte Existencias",
+}

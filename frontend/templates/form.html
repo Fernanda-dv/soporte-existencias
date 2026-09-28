@@ -78,40 +78,24 @@
                         <label for="funcionario_nombre" class="form-label">
                             Nombre Completo *
                         </label>
-                        <input
-                            type="text"
-                            id="funcionario_nombre"
-                            name="funcionario_nombre"
-                            class="input-text uppercase-input"
-                            required
-                        >
+                        <input type="text" id="funcionario_nombre" name="funcionario_nombre" class="input-text uppercase-input" required>
                     </div>
 
                     <div class="form-group">
                         <label for="direccion" class="form-label">
                             Dirección *
                         </label>
-                        <select
-                            id="direccion"
-                            name="direccion"
-                            class="select-input"
-                            required
-                        >
-
+                        <select id="direccion" name="direccion" class="select-input" required>
                             <option value="">
                                 Seleccionar dirección
                             </option>
-
                             {% for d in direcciones %}
                                 <option value="{{ d.id }}">
                                     {{ d.nombre }}
                                 </option>
                             {% endfor %}
-
                         </select>
-
                     </div>
-
 
                     <div class="form-group">
 
@@ -119,356 +103,177 @@
                             Departamento *
                         </label>
 
-                        <select
-                            id="departamento"
-                            name="departamento"
-                            class="select-input"
-                            required
-                            disabled
-                        >
-
+                        <select id="departamento" name="departamento" class="select-input" required disabled>
                             <option value="">
                                 Primero seleccione dirección
                             </option>
-
                             {% for dep in departamentos %}
                                 <option
                                     value="{{ dep.id }}"
-                                    data-direccion="{{ dep.direccion_id }}"
-                                >
+                                    data-direccion="{{ dep.direccion_id }}">
                                     {{ dep.nombre }}
                                 </option>
                             {% endfor %}
-
                         </select>
-
                     </div>
-
 
                     <div class="form-group">
 
                         <label for="anexo" class="form-label">
                             Anexo *
                         </label>
-
-                        <input
-                            type="text"
-                            id="anexo"
-                            name="anexo"
-                            class="input-text"
-                            placeholder="Ej: 6000"
-                            maxlength="4"
-                            pattern="\d{4}"
-                            title="Debe ser un número entero de exactamente 4 dígitos"
-                            required
-                        >
-
+                        <input type="text" id="anexo" name="anexo" class="input-text" placeholder="Ej: 6000" maxlength="4" pattern="\d{4}" title="Debe ser un número entero de exactamente 4 dígitos" required>
                     </div>
-
 
                     <div class="form-group">
 
                         <label for="cargo" class="form-label">
                             Cargo *
                         </label>
-
-                        <select
-                            id="cargo"
-                            name="cargo"
-                            class="select-input"
-                            required
-                        >
-
+                        <select id="cargo" name="cargo" class="select-input" required>
                             <option value="">
                                 Seleccionar cargo
                             </option>
-
                             {% for c in cargos %}
                                 <option value="{{ c.id }}">
                                     {{ c.nombre }}
                                 </option>
                             {% endfor %}
-
                         </select>
-
                     </div>
-
                 </div>
-
             </section>
 
-
-
-            <!-- ========================================================= -->
             <!-- SECCIÓN 2: EQUIPO -->
-            <!-- ========================================================= -->
-
             <section class="form-card">
-
                 <div class="card-header">
                     <i class="fa-solid fa-laptop"></i>
                     <h3>2. Equipo</h3>
                 </div>
-
-
                 <div class="form-grid">
-
-
                     <div class="form-group">
-
                         <label for="tipo_equipo" class="form-label">
                             Tipo de Equipo *
                         </label>
-
-                        <select
-                            id="tipo_equipo"
-                            name="tipo_equipo"
-                            class="select-input"
-                            required
-                        >
-
+                        <select id="tipo_equipo" name="tipo_equipo" class="select-input" required>
                             <option value="">
                                 Seleccionar tipo
                             </option>
-
                             {% for t in tipos_equipo %}
                                 <option value="{{ t.id }}">
                                     {{ t.nombre }}
                                 </option>
                             {% endfor %}
-
                         </select>
-
                     </div>
 
-
-
-                    <!-- ================================================= -->
                     <!-- N° SERIE -->
-                    <!-- ================================================= -->
-
                     <div class="form-group">
-
                         <label for="numero_serie" class="form-label">
                             N° de Serie
                         </label>
-
-
                         <div class="input-barcode-wrapper">
-
-                            <input
-                                type="text"
-                                id="numero_serie"
-                                name="numero_serie"
-                                class="input-text"
-                                placeholder="Ingresar o escanear N° de serie"
-                                autocomplete="off"
-                            >
-
-
-                            <button
-                                type="button"
-                                id="btn-scan-barcode"
-                                class="btn-scan-barcode"
-                                title="Escanear código de barras"
-                            >
-
+                            <input type="text" id="numero_serie" name="numero_serie" class="input-text" placeholder="Ingresar o escanear N° de serie" autocomplete="off">
+                            <button type="button" id="btn-scan-barcode" class="btn-scan-barcode" title="Escanear código de barras">
                                 <i class="fa-solid fa-camera"></i>
-
                                 <span>
                                     Escanear
                                 </span>
-
                             </button>
-
                         </div>
-
-
                         <small class="input-help">
-
                             <i class="fa-solid fa-circle-info"></i>
-
                             Puede ingresar el número manualmente
                             o utilizar la cámara para escanearlo.
-
                         </small>
-
                     </div>
 
-
-
-                    <!-- ================================================= -->
                     <!-- N° INVENTARIO -->
-                    <!-- ================================================= -->
-
                     <div class="form-group">
-
-                        <label
-                            for="numero_inventario"
-                            class="form-label"
-                        >
+                        <label for="numero_inventario" class="form-label">
                             N° de Inventario
                         </label>
-
-                        <input
-                            type="text"
-                            id="numero_inventario"
-                            name="numero_inventario"
-                            class="input-text"
-                            placeholder="Ingresar N° inventario"
-                        >
-
+                        <input type="text" id="numero_inventario" name="numero_inventario" class="input-text" placeholder="Ingresar N° inventario">
                     </div>
 
-
-
                     <div class="form-group">
-
                         <label for="ram" class="form-label">
                             Memoria RAM *
                         </label>
-
-                        <select
-                            id="ram"
-                            name="ram"
-                            class="select-input"
-                            required
-                        >
-
+                        <select id="ram" name="ram" class="select-input" required>
                             <option value="">
                                 Seleccionar RAM
                             </option>
-
                             {% for r in rams %}
                                 <option value="{{ r.id }}">
                                     {{ r.tipo }}
                                 </option>
                             {% endfor %}
-
                         </select>
-
                     </div>
 
-
-
                     <div class="form-group">
-
                         <label for="disco" class="form-label">
                             Disco Duro *
                         </label>
-
-                        <select
-                            id="disco"
-                            name="disco"
-                            class="select-input"
-                            required
-                        >
-
+                        <select id="disco" name="disco" class="select-input" required>
                             <option value="">
                                 Seleccionar disco
                             </option>
-
                             {% for d in discos %}
                                 <option value="{{ d.id }}">
                                     {{ d.tipo }}
                                 </option>
                             {% endfor %}
-
                         </select>
-
                     </div>
-
-
 
                     <div class="form-group">
 
                         <label for="procesador" class="form-label">
                             Procesador *
                         </label>
-
-                        <select
-                            id="procesador"
-                            name="procesador"
-                            class="select-input"
-                            required
-                        >
-
+                        <select id="procesador" name="procesador" class="select-input" required>
                             <option value="">
                                 Seleccionar procesador
                             </option>
-
                             {% for p in procesadores %}
                                 <option value="{{ p.id }}">
                                     {{ p.nombre }}
                                 </option>
                             {% endfor %}
-
                         </select>
-
                     </div>
 
-
-
                     <div class="form-group">
-
-                        <label
-                            for="sistema_operativo"
-                            class="form-label"
-                        >
+                        <label for="sistema_operativo" class="form-label">
                             Sistema Operativo *
                         </label>
-
-                        <select
-                            id="sistema_operativo"
-                            name="sistema_operativo"
-                            class="select-input"
-                            required
-                        >
-
+                        <select id="sistema_operativo" name="sistema_operativo" class="select-input" required>
                             <option value="">
                                 Seleccionar sistema operativo
-
                             {% for so in sistemas_operativos %}
                                 <option value="{{ so.id }}">
                                     {{ so.tipo }}
                                 </option>
                             {% endfor %}
-
                         </select>
-
                     </div>
-
-
                 </div>
-
             </section>
 
-
-
-            <!-- ========================================================= -->
             <!-- SECCIÓN 3: MONITOR -->
-            <!-- ========================================================= -->
-
             <section class="form-card">
-
                 <div class="card-header">
                     <i class="fa-solid fa-display"></i>
                     <h3>3. Monitor</h3>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label
-                            for="tiene_monitor"
-                            class="form-label"
-                        >
+                        <label for="tiene_monitor" class="form-label">
                             ¿Tiene Monitor? *
                         </label>
-                        <select
-                            id="tiene_monitor"
-                            name="tiene_monitor"
-                            class="select-input"
-                            required
-                        >
+                        <select id="tiene_monitor" name="tiene_monitor" class="select-input" required>
                             <option value="">
                                 Seleccionar
                             </option>
@@ -480,22 +285,12 @@
                             </option>
                         </select>
                     </div>
-                    <div
-                        class="form-group"
-                        id="group-cantidad-monitor"
-                        style="display: none;"
-                    >
-                        <label
-                            for="cantidad_monitores"
-                            class="form-label"
-                        >
+                    <div class="form-group" id="group-cantidad-monitor" style="display: none;">
+                        <label for="cantidad_monitores" class="form-label">
                             ¿Cuántos Monitores?
                         </label>
                         <select
-                            id="cantidad_monitores"
-                            name="cantidad_monitores"
-                            class="select-input"
-                        >
+                            id="cantidad_monitores" name="cantidad_monitores" class="select-input">
                             <option value="">
                                 Cantidad
                             </option>
@@ -521,10 +316,7 @@
                                 class="form-label">
                                 Pulgadas *
                             </label>
-                            <select
-                                id="monitor1_pulgadas"
-                                name="monitor1_pulgadas"
-                                class="select-input">
+                            <select id="monitor1_pulgadas" name="monitor1_pulgadas" class="select-input">
                                 <option value="">
                                     Seleccionar pulgadas
                                 </option>
@@ -556,11 +348,7 @@
                             <label for="monitor2_pulgadas" class="form-label">
                                 Pulgadas *
                             </label>
-                            <select
-                                id="monitor2_pulgadas"
-                                name="monitor2_pulgadas"
-                                class="select-input"
-                            >
+                            <select id="monitor2_pulgadas" name="monitor2_pulgadas" class="select-input">
                                 <option value="">
                                     Seleccionar pulgadas
                                 </option>
@@ -574,14 +362,8 @@
                             </select>
                         </div>
                         <div class="form-group checkbox-group">
-
                             <label class="checkbox-label">
-                                <input
-                                    type="checkbox"
-                                    id="monitor2_hdmi"
-                                    name="monitor2_hdmi"
-                                    value="True"
-                                >
+                                <input type="checkbox" id="monitor2_hdmi" name="monitor2_hdmi" value="True">
                                 <span>
                                     ¿Posee HDMI?
                                 </span>
@@ -590,6 +372,7 @@
                     </div>
                 </div>
             </section>
+
             <!-- SECCIÓN 4: IMPRESORA -->
             <section class="form-card">
                 <div class="card-header">
@@ -598,18 +381,10 @@
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label
-                            for="tiene_impresora"
-                            class="form-label"
-                        >
+                        <label for="tiene_impresora" class="form-label">
                             ¿Tiene Impresora? *
                         </label>
-                        <select
-                            id="tiene_impresora"
-                            name="tiene_impresora"
-                            class="select-input"
-                            required
-                        >
+                        <select id="tiene_impresora" name="tiene_impresora" class="select-input" required>
                             <option value="">
                                 Seleccionar
                             </option>
@@ -621,187 +396,86 @@
                             </option>
                         </select>
                     </div>
-                    <div
-                        class="form-group"
-                        id="group-tipo-impresora"
-                        style="display: none;"
-                    >
+                    <div class="form-group" id="group-tipo-impresora" style="display: none;">
                         <label
                             for="tipo_impresora"
                             class="form-label"
                         >
                             Tipo de Impresora *
                         </label>
-
-                        <select
-                            id="tipo_impresora"
-                            name="tipo_impresora"
-                            class="select-input"
-                        >
-
+                        <select id="tipo_impresora" name="tipo_impresora" class="select-input">
                             <option value="">
                                 Seleccionar tipo
                             </option>
-
                             {% for imp in tipos_impresora %}
                                 <option value="{{ imp.id }}">
                                     {{ imp.nombre }}
                                 </option>
                             {% endfor %}
-
                         </select>
-
                     </div>
-
-
                 </div>
-
             </section>
 
-
-
-            <!-- ========================================================= -->
             <!-- BOTONES -->
-            <!-- ========================================================= -->
-
             <div class="form-actions-bar">
-
-                <a
-                    href="{% url 'inicio' %}"
-                    class="btn-secondary"
-                >
-
+                <a href="{% url 'inicio' %}" class="btn-secondary">
                     <i class="fa-solid fa-xmark"></i>
-
                     Cancelar
-
                 </a>
-
-
-                <button
-                    type="submit"
-                    class="btn-primary"
-                >
-
+                <button type="submit" class="btn-primary">
                     <i class="fa-solid fa-floppy-disk"></i>
-
                     Guardar Registro
-
                 </button>
-
             </div>
-
         </form>
-
     </main>
 
-
-
-    <!-- ========================================================= -->
     <!-- MODAL LECTOR DE CÓDIGO DE BARRAS -->
-    <!-- ========================================================= -->
-
-    <div
-        id="barcode-modal"
-        class="barcode-modal"
-        aria-hidden="true"
-    >
-
+    <div id="barcode-modal" class="barcode-modal" aria-hidden="true">
         <div class="barcode-modal-content">
-
-
             <div class="barcode-modal-header">
-
                 <div>
-
                     <h3>
                         <i class="fa-solid fa-camera"></i>
                         Escanear N° de Serie
                     </h3>
-
                     <p>
                         Apunte la cámara hacia el código de barras
                     </p>
-
                 </div>
 
-
-                <button
-                    type="button"
-                    id="btn-close-scanner"
-                    class="btn-close-scanner"
-                    title="Cerrar"
-                >
-
+                <button type="button" id="btn-close-scanner" class="btn-close-scanner" title="Cerrar">
                     <i class="fa-solid fa-xmark"></i>
-
                 </button>
-
             </div>
 
-
-
             <div class="barcode-reader-container">
-
                 <div id="barcode-reader"></div>
-
-                <div
-                    id="scanner-loading"
-                    class="scanner-loading"
-                >
-
+                <div id="scanner-loading" class="scanner-loading">
                     <i class="fa-solid fa-spinner fa-spin"></i>
-
                     <span>
                         Iniciando cámara...
                     </span>
-
                 </div>
-
             </div>
 
-
-
-            <div
-                id="scanner-status"
-                class="scanner-status"
-            >
-
+            <div id="scanner-status" class="scanner-status">
                 <i class="fa-solid fa-barcode"></i>
-
                 <span>
                     Esperando código de barras...
                 </span>
-
             </div>
             <div class="barcode-modal-actions">
-
-                <button
-                    type="button"
-                    id="btn-cancel-scanner"
-                    class="btn-secondary scanner-cancel-button"
-                >
-
+                <button type="button" id="btn-cancel-scanner" class="btn-secondary scanner-cancel-button">
                     <i class="fa-solid fa-xmark"></i>
-
                     Cancelar
-
                 </button>
-
             </div>
-
         </div>
-
     </div>
-
-    <script
-        src="https://unpkg.com/html5-qrcode"
-        type="text/javascript"
-    ></script>
-
-
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <!-- JS de Lógica Dinámica y Validaciones -->
     <script src="{% static 'js/form.js' %}"></script>
-
 </body>
 </html>
