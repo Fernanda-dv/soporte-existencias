@@ -7,8 +7,9 @@
     <title>Soporte Inventario</title>
 
     <!-- Tipografía Oficial Rubik y FontAwesome -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'vendor/rubik/rubik.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/solid.min.css' %}">
 
     <!-- CSS del Sistema de Inventario -->
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
@@ -75,7 +76,7 @@
 
             <!-- Pie de la Tarjeta con Identidad Municipal -->
             <div class="login-card-footer">
-                <img src="https://www.municipalidadmaipu.cl/img/maipu-logo-blanco.7e5cb3ca.png" alt="Municipalidad de Maipú" class="municipal-logo">
+                <img src="{% static 'img/maipu-logo-blanco.svg' %}" alt="Municipalidad de Maipú" class="municipal-logo">
             </div>
         </div>
     </div>

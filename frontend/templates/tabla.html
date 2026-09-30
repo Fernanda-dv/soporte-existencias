@@ -7,8 +7,9 @@
     <title>Inventario de Equipos e Impresoras - Soporte Inventario</title>
 
     <!-- Tipografía Oficial Rubik y FontAwesome -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'vendor/rubik/rubik.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/solid.min.css' %}">
 
     <!-- CSS Tabla -->
     <link rel="stylesheet" href="{% static 'css/tabla.css' %}">
@@ -86,10 +87,10 @@
 
                 <!-- Filtro por Técnico en Equipos -->
                 <div class="filter-toggle-box">
-                    <label class="filter-label">Registros de:</label>
-                    <select name="tecnico_eq" class="select-filter" onchange="this.form.submit()">
-                        <option value="todos" {% if tecnico_eq == 'todos' %}selected{% endif %}>Todos los Técnicos</option>
-                        <option value="mio" {% if tecnico_eq == 'mio' %}selected{% endif %}>Mis Ingresos ({{ user.username }})</option>
+                    <label class="filter-label">Ver Registros de:</label>
+                    <select name="tecnico" class="select-filter" onchange="this.form.submit()">
+                        <option value="todos" {% if filtro_tecnico == 'todos' %}selected{% endif %}>Todos los Técnicos</option>
+                        <option value="mio" {% if filtro_tecnico == 'mio' %}selected{% endif %}>Mis Ingresos ({{ user.username }})</option>
                     </select>
                 </div>
 
@@ -102,10 +103,10 @@
 
             <!-- Botones de Exportación de Equipos -->
             <div class="export-buttons-group">
-                <a href="{% url 'exportar_excel' %}?tecnico={{ tecnico_eq }}&q={{ q_eq }}" class="btn-export excel" title="Exportar Equipos a Excel">
+                <a href="{% url 'exportar_excel' %}?tecnico={{ filtro_tecnico }}&q={{ query_busqueda }}" class="btn-export excel" title="Exportar a Excel">
                     <i class="fa-solid fa-file-excel"></i> Exportar Excel
                 </a>
-                <a href="{% url 'exportar_csv' %}?tecnico={{ tecnico_eq }}&q={{ q_eq }}" class="btn-export csv" title="Exportar Equipos a CSV">
+                <a href="{% url 'exportar_csv' %}?tecnico={{ filtro_tecnico }}&q={{ query_busqueda }}" class="btn-export csv" title="Exportar a CSV">
                     <i class="fa-solid fa-file-csv"></i> Exportar CSV
                 </a>
             </div>
@@ -252,10 +253,10 @@
 
                 <!-- Filtro por Técnico en Impresoras -->
                 <div class="filter-toggle-box">
-                    <label class="filter-label">Registros de:</label>
-                    <select name="tecnico_imp" class="select-filter" onchange="this.form.submit()">
-                        <option value="todos" {% if tecnico_imp == 'todos' %}selected{% endif %}>Todos los Técnicos</option>
-                        <option value="mio" {% if tecnico_imp == 'mio' %}selected{% endif %}>Mis Ingresos ({{ user.username }})</option>
+                    <label class="filter-label">Ver Registros de:</label>
+                    <select name="tecnico" class="select-filter" onchange="this.form.submit()">
+                        <option value="todos" {% if filtro_tecnico == 'todos' %}selected{% endif %}>Todos los Técnicos</option>
+                        <option value="mio" {% if filtro_tecnico == 'mio' %}selected{% endif %}>Mis Ingresos ({{ user.username }})</option>
                     </select>
                 </div>
 
@@ -268,10 +269,10 @@
 
             <!-- Botones de Exportación de Impresoras -->
             <div class="export-buttons-group">
-                <a href="{% url 'exportar_impresoras_excel' %}?tecnico={{ tecnico_imp }}&q={{ q_imp }}" class="btn-export excel" title="Exportar Impresoras a Excel">
+                <a href="{% url 'exportar_impresoras_excel' %}?tecnico={{ filtro_tecnico }}&q={{ query_busqueda }}" class="btn-export excel" title="Exportar a Excel">
                     <i class="fa-solid fa-file-excel"></i> Exportar Excel
                 </a>
-                <a href="{% url 'exportar_impresoras_csv' %}?tecnico={{ tecnico_imp }}&q={{ q_imp }}" class="btn-export csv" title="Exportar Impresoras a CSV">
+                <a href="{% url 'exportar_impresoras_csv' %}?tecnico={{ filtro_tecnico }}&q={{ query_busqueda }}" class="btn-export csv" title="Exportar a CSV">
                     <i class="fa-solid fa-file-csv"></i> Exportar CSV
                 </a>
             </div>

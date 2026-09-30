@@ -144,83 +144,697 @@ document.addEventListener('DOMContentLoaded', function () {
     const scannerLoading = document.getElementById('scanner-loading');
 
     let html5QrCode = null;
-    let currentTargetInputId = null;
 
-    // Vincular todos los botones con la clase .btn-scan-barcode
-    document.querySelectorAll('.btn-scan-barcode').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const targetId = this.getAttribute('data-target');
-            if (targetId) {
-                currentTargetInputId = targetId;
-                abrirModalScanner();
+    let scannerRunning = false;
+
+    let scannerStarting = false;
+
+
+
+    // ------------------------------------------------------------
+    // Actualizar mensaje del lector
+    // ------------------------------------------------------------
+
+    function setScannerStatus(message, type = 'normal') {
+
+        if (!scannerStatus) {
+            return;
+        }
+
+
+        let icon = 'fa-barcode';
+
+
+        if (type === 'success') {
+
+            icon = 'fa-circle-check';
+
+        } else if (type === 'error') {
+
+            icon = 'fa-circle-exclamation';
+
+        } else if (type === 'loading') {
+
+            icon = 'fa-spinner fa-spin';
+
+        }
+
+
+        scannerStatus.innerHTML = `
+            <i class="fa-solid ${icon}"></i>
+            <span>${message}</span>
+        `;
+
+
+        scannerStatus.classList.remove(
+            'scanner-success',
+            'scanner-error'
+        );
+
+
+        if (type === 'success') {
+
+            scannerStatus.classList.add(
+                'scanner-success'
+            );
+
+        }
+
+
+        if (type === 'error') {
+
+            scannerStatus.classList.add(
+                'scanner-error'
+            );
+
+        }
+
+    }
+
+
+
+    // ------------------------------------------------------------
+    // Abrir modal
+    // ------------------------------------------------------------
+
+    function openScannerModal() {
+
+        if (!barcodeModal) {
+            return;
+        }
+
+
+        barcodeModal.classList.add('active');
+
+        barcodeModal.setAttribute(
+            'aria-hidden',
+            'false'
+        );
+
+
+        document.body.classList.add(
+            'scanner-open'
+        );
+
+
+        if (scannerLoading) {
+
+            scannerLoading.style.display = 'flex';
+
+        }
+
+
+        setScannerStatus(
+            'Iniciando cámara...',
+            'loading'
+        );
+
+
+        startBarcodeScanner();
+
+    }
+
+
+
+    // ------------------------------------------------------------
+    // Cerrar modal
+    // ------------------------------------------------------------
+
+    async function closeScannerModal() {
+
+        await stopBarcodeScanner();
+
+
+        if (barcodeModal) {
+
+            barcodeModal.classList.remove(
+                'active'
+            );
+
+            barcodeModal.setAttribute(
+                'aria-hidden',
+                'true'
+            );
+
+        }
+
+
+        document.body.classList.remove(
+            'scanner-open'
+        );
+
+    }
+
+
+
+    // ------------------------------------------------------------
+    // Iniciar lector
+    // ------------------------------------------------------------
+
+    async function startBarcodeScanner() {
+
+        if (
+            scannerRunning ||
+            scannerStarting
+        ) {
+            return;
+        }
+
+
+        if (
+            typeof Html5Qrcode === 'undefined'
+        ) {
+
+            setScannerStatus(
+                'No se pudo cargar el lector de códigos.',
+                'error'
+            );
+
+            if (scannerLoading) {
+                scannerLoading.style.display = 'none';
             }
-        });
-    });
 
-    function abrirModalScanner() {
-        if (!modalScanner) return;
-        modalScanner.style.display = 'flex';
-        modalScanner.setAttribute('aria-hidden', 'false');
-        iniciarCamara();
-    }
+            return;
+        }
 
-    function cerrarModalScanner() {
-        if (!modalScanner) return;
-        detenerCamara().then(() => {
-            modalScanner.style.display = 'none';
-            modalScanner.setAttribute('aria-hidden', 'true');
-        });
-    }
 
-    if (btnCloseScanner) btnCloseScanner.addEventListener('click', cerrarModalScanner);
-    if (btnCancelScanner) btnCancelScanner.addEventListener('click', cerrarModalScanner);
+        scannerStarting = true;
 
-    function iniciarCamara() {
-        if (scannerLoading) scannerLoading.style.display = 'flex';
-        if (scannerStatus) scannerStatus.innerHTML = '<i class="fa-solid fa-barcode"></i><span>Iniciando cámara...</span>';
 
-        html5QrCode = new Html5Qrcode("barcode-reader");
-        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
+        try {
 
-        html5QrCode.start(
-            { facingMode: "environment" },
-            config,
-            onScanSuccess
-        ).then(() => {
-            if (scannerLoading) scannerLoading.style.display = 'none';
-            if (scannerStatus) scannerStatus.innerHTML = '<i class="fa-solid fa-camera"></i><span>Apunte al código de barras</span>';
-        }).catch(err => {
-            if (scannerLoading) scannerLoading.style.display = 'none';
-            if (scannerStatus) scannerStatus.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i><span>Error al acceder a la cámara.</span>`;
-        });
-    }
+            html5QrCode =
+                new Html5Qrcode(
+                    'barcode-reader'
+                );
 
-    function onScanSuccess(decodedText) {
-        if (currentTargetInputId) {
-            const inputTarget = document.getElementById(currentTargetInputId);
-            if (inputTarget) {
-                inputTarget.value = decodedText.trim();
-                // Destacar visualmente el campo actualizado
-                inputTarget.style.borderColor = '#10174A';
-                inputTarget.style.backgroundColor = '#eef2ff';
-                setTimeout(() => {
-                    inputTarget.style.borderColor = '';
-                    inputTarget.style.backgroundColor = '';
-                }, 1500);
+
+            // Códigos de barras que se intentarán reconocer.
+            const formatsToSupport = [
+
+                Html5QrcodeSupportedFormats.CODE_128,
+
+                Html5QrcodeSupportedFormats.CODE_39,
+
+                Html5QrcodeSupportedFormats.CODE_93,
+
+                Html5QrcodeSupportedFormats.EAN_13,
+
+                Html5QrcodeSupportedFormats.EAN_8,
+
+                Html5QrcodeSupportedFormats.UPC_A,
+
+                Html5QrcodeSupportedFormats.UPC_E,
+
+                Html5QrcodeSupportedFormats.ITF
+
+            ];
+
+
+            const config = {
+
+                fps: 10,
+
+                qrbox: function(
+                    viewfinderWidth,
+                    viewfinderHeight
+                ) {
+
+                    const minEdge =
+                        Math.min(
+                            viewfinderWidth,
+                            viewfinderHeight
+                        );
+
+
+                    return {
+
+                        width: Math.floor(
+                            minEdge * 0.85
+                        ),
+
+                        height: Math.floor(
+                            minEdge * 0.35
+                        )
+
+                    };
+
+                },
+
+                aspectRatio: 1.777778,
+
+                formatsToSupport:
+                    formatsToSupport,
+
+                disableFlip: false
+
+            };
+
+
+
+            // Preferimos cámara trasera en teléfonos/tablets.
+            const cameraConfig = {
+                facingMode: {
+                    exact: 'environment'
+                }
+            };
+
+
+            try {
+
+                await html5QrCode.start(
+
+                    cameraConfig,
+
+                    config,
+
+                    onBarcodeScanned,
+
+                    onBarcodeScanError
+
+                );
+
+            } catch (environmentCameraError) {
+
+                console.warn(
+                    'No fue posible iniciar la cámara trasera:',
+                    environmentCameraError
+                );
+
+
+                // Si no existe cámara trasera o no se puede
+                // acceder a ella, utilizamos cualquier cámara.
+                const cameras =
+                    await Html5Qrcode.getCameras();
+
+
+                if (
+                    !cameras ||
+                    cameras.length === 0
+                ) {
+
+                    throw new Error(
+                        'No se encontró ninguna cámara disponible.'
+                    );
+
+                }
+
+
+                await html5QrCode.start(
+
+                    cameras[0].id,
+
+                    config,
+
+                    onBarcodeScanned,
+
+                    onBarcodeScanError
+
+                );
+
             }
+
+
+            scannerRunning = true;
+
+
+            if (scannerLoading) {
+
+                scannerLoading.style.display = 'none';
+
+            }
+
+
+            setScannerStatus(
+                'Apunte la cámara hacia el código de barras.',
+                'normal'
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                'Error iniciando lector:',
+                error
+            );
+
+
+            scannerRunning = false;
+
+
+            if (scannerLoading) {
+
+                scannerLoading.style.display = 'none';
+
+            }
+
+
+            let message =
+                'No fue posible acceder a la cámara.';
+
+
+            if (
+                error &&
+                error.message
+            ) {
+
+                message =
+                    error.message;
+
+            }
+
+
+            setScannerStatus(
+                message,
+                'error'
+            );
+
+
+        } finally {
+
+            scannerStarting = false;
+
         }
-        if (scannerStatus) {
-            scannerStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>Código detectado: ${decodedText}</span>`;
-        }
-        cerrarModalScanner();
+
     }
 
-    function detenerCamara() {
-        if (html5QrCode && html5QrCode.isScanning) {
-            return html5QrCode.stop().then(() => {
-                html5QrCode.clear();
-            }).catch(() => {});
+
+
+    // ------------------------------------------------------------
+    // Código detectado
+    // ------------------------------------------------------------
+
+    async function onBarcodeScanned(
+        decodedText,
+        decodedResult
+    ) {
+
+        console.log(
+            'Código detectado:',
+            decodedText
+        );
+
+
+        if (!decodedText) {
+            return;
         }
-        return Promise.resolve();
+
+
+        // Escribir el código en el campo N° de Serie.
+        if (numeroSerie) {
+
+            numeroSerie.value =
+                decodedText.trim();
+
+
+            // Lanzar evento por si existe otra lógica
+            // conectada al campo.
+            numeroSerie.dispatchEvent(
+                new Event(
+                    'input',
+                    {
+                        bubbles: true
+                    }
+                )
+            );
+
+            numeroSerie.dispatchEvent(
+                new Event(
+                    'change',
+                    {
+                        bubbles: true
+                    }
+                )
+            );
+
+        }
+
+
+        setScannerStatus(
+            'Código detectado correctamente.',
+            'success'
+        );
+
+
+        // Detener la cámara.
+        await stopBarcodeScanner();
+
+
+        // Cerrar el modal después de una pequeña pausa.
+        setTimeout(function() {
+
+            if (barcodeModal) {
+
+                barcodeModal.classList.remove(
+                    'active'
+                );
+
+                barcodeModal.setAttribute(
+                    'aria-hidden',
+                    'true'
+                );
+
+            }
+
+
+            document.body.classList.remove(
+                'scanner-open'
+            );
+
+
+            // Llevar el cursor al campo.
+            if (numeroSerie) {
+
+                numeroSerie.focus();
+
+            }
+
+        }, 500);
+
     }
+
+
+
+    // ------------------------------------------------------------
+    // Errores normales de lectura
+    // ------------------------------------------------------------
+
+    function onBarcodeScanError(errorMessage) {
+
+        /*
+         * Este evento se ejecuta constantemente mientras la cámara
+         * está buscando un código.
+         *
+         * No mostramos errores al usuario porque es normal que
+         * existan muchos frames donde todavía no se haya detectado
+         * ningún código.
+         */
+
+    }
+
+
+
+    // ------------------------------------------------------------
+    // Detener cámara
+    // ------------------------------------------------------------
+
+    async function stopBarcodeScanner() {
+
+        if (!html5QrCode) {
+
+            scannerRunning = false;
+
+            return;
+
+        }
+
+
+        try {
+
+            if (scannerRunning) {
+
+                await html5QrCode.stop();
+
+            }
+
+        } catch (error) {
+
+            console.warn(
+                'Error deteniendo cámara:',
+                error
+            );
+
+        }
+
+
+        try {
+
+            html5QrCode.clear();
+
+        } catch (error) {
+
+            console.warn(
+                'Error limpiando lector:',
+                error
+            );
+
+        }
+
+
+        html5QrCode = null;
+
+        scannerRunning = false;
+
+        scannerStarting = false;
+
+
+        if (barcodeReader) {
+
+            barcodeReader.innerHTML = '';
+
+        }
+
+    }
+
+
+
+    // ------------------------------------------------------------
+    // Eventos botones
+    // ------------------------------------------------------------
+
+    if (btnScanBarcode) {
+
+        btnScanBarcode.addEventListener(
+            'click',
+            function() {
+
+                openScannerModal();
+
+            }
+        );
+
+    }
+
+
+    if (btnCloseScanner) {
+
+        btnCloseScanner.addEventListener(
+            'click',
+            function() {
+
+                closeScannerModal();
+
+            }
+        );
+
+    }
+
+
+    if (btnCancelScanner) {
+
+        btnCancelScanner.addEventListener(
+            'click',
+            function() {
+
+                closeScannerModal();
+
+            }
+        );
+
+    }
+
+
+
+    // ------------------------------------------------------------
+    // Cerrar con ESC
+    // ------------------------------------------------------------
+
+    document.addEventListener(
+        'keydown',
+        function(event) {
+
+            if (
+                event.key === 'Escape' &&
+                barcodeModal &&
+                barcodeModal.classList.contains(
+                    'active'
+                )
+            ) {
+
+                closeScannerModal();
+
+            }
+
+        }
+    );
+
+
+
+    // ============================================================
+    // 7. VALIDACIÓN PREVIA AL ENVÍO
+    // ============================================================
+
+    const form =
+        document.getElementById(
+            'inventory-form'
+        );
+
+
+    if (form) {
+
+        form.addEventListener(
+            'submit',
+            function(event) {
+
+                if (
+                    inputAnexo &&
+                    inputAnexo.value.length !== 4
+                ) {
+
+                    event.preventDefault();
+
+
+                    alert(
+                        'El anexo debe tener exactamente 4 dígitos.'
+                    );
+
+
+                    inputAnexo.focus();
+
+                    return;
+
+                }
+
+            }
+        );
+
+    }
+
+
+
+    // ============================================================
+    // 8. DETENER CÁMARA SI EL USUARIO ABANDONA LA PÁGINA
+    // ============================================================
+
+    window.addEventListener(
+        'beforeunload',
+        function() {
+
+            if (html5QrCode) {
+
+                try {
+
+                    html5QrCode.stop();
+
+                } catch (error) {
+
+                    console.warn(error);
+
+                }
+
+            }
+
+        }
+    );
+
 });

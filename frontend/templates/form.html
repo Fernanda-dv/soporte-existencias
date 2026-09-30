@@ -9,10 +9,6 @@
     <!-- Tipografía Oficial Rubik y FontAwesome -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Lector de Código de Barras y QR Local -->
-    <script src="{% static 'js/html5-qrcode.min.js' %}"></script>
-
     <!-- CSS del Formulario -->
     <link rel="stylesheet" href="{% static 'css/form.css' %}">
 </head>
@@ -67,18 +63,6 @@
                 {% if equipo %}Editar Registro de Equipo{% else %}Registro de nuevo equipo{% endif %}
             </h2>
         </div>
-
-        <!-- Mensajes de Alerta y Validación -->
-        {% if messages %}
-            <div class="messages-container">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">
-                        <i class="fa-solid fa-triangle-exclamation"></i> {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-
         <form method="post" id="inventory-form" class="inventory-form">
             {% csrf_token %}
 
@@ -527,7 +511,7 @@
             </div>
         </div>
     </div>
-
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <!-- JS de Lógica Dinámica y Validaciones -->
     <script src="{% static 'js/form.js' %}"></script>
 </body>
