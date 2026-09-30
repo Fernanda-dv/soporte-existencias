@@ -389,10 +389,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
 
-        scannerStatus.innerHTML = `
-            <i class="fa-solid ${icon}"></i>
-            <span>${message}</span>
-        `;
+        // Se arma con nodos (no innerHTML) para que ningún texto se interprete como HTML.
+        const iconEl = document.createElement('i');
+        iconEl.className = `fa-solid ${icon}`;
+        const textEl = document.createElement('span');
+        textEl.textContent = message;
+        scannerStatus.replaceChildren(iconEl, document.createTextNode(' '), textEl);
 
 
         scannerStatus.classList.remove(

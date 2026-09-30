@@ -6,8 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ingresar Equipo - Soporte Inventario</title>
     <!-- Tipografía Oficial Rubik y FontAwesome -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'vendor/rubik/rubik.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/solid.min.css' %}">
     <!-- CSS del Formulario -->
     <link rel="stylesheet" href="{% static 'css/form.css' %}">
 </head>
@@ -64,6 +65,15 @@
                 Registro de nuevo equipo
             </h2>
         </div>
+        {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <i class="fa-solid fa-triangle-exclamation"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
         <form method="post" id="inventory-form" class="inventory-form">
             {% csrf_token %}
             <!-- SECCIÓN 1: DATOS DEL FUNCIONARIO -->
@@ -474,7 +484,7 @@
             </div>
         </div>
     </div>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="{% static 'vendor/html5-qrcode/html5-qrcode.min.js' %}"></script>
     <!-- JS de Lógica Dinámica y Validaciones -->
     <script src="{% static 'js/form.js' %}"></script>
 </body>
