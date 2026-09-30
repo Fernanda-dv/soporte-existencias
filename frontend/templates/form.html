@@ -4,16 +4,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ingresar Equipo - Soporte Inventario</title>
+    <title>{% if equipo %}Editar Equipo{% else %}Ingresar Equipo{% endif %} - Soporte Inventario</title>
+
     <!-- Tipografía Oficial Rubik y FontAwesome -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Lector de Código de Barras y QR Local -->
+    <script src="{% static 'js/html5-qrcode.min.js' %}"></script>
+
     <!-- CSS del Formulario -->
     <link rel="stylesheet" href="{% static 'css/form.css' %}">
 </head>
-
 <body class="form-body">
-    <!-- Navbar Superior Institucional -->
+
+    <!-- Header / Navbar Superior Institucional -->
     <header class="navbar-header">
         <div class="navbar-container">
             <div class="brand-box">
@@ -22,23 +27,21 @@
                 </a>
                 <div class="brand-text">
                     <h1 class="system-title">SOPORTE INVENTARIO</h1>
-                    <span class="system-subtitle">Ingreso de equipos</span>
+                    <span class="system-subtitle">Municipalidad de Maipú</span>
                 </div>
             </div>
 
-            <!-- Usuario Logueado y Salida -->
+            <!-- Usuario y Cierre de Sesión -->
             <div class="user-profile-box">
                 <div class="user-info">
-                    <span class="user-label">Técnico responsable</span>
+                    <span class="user-label">Técnico Responsable</span>
                     <strong class="user-name">
-                        <i class="fa-solid fa-circle-user"></i>
+                        <i class="fa-solid fa-circle-user"></i> 
                         {{ user.get_full_name|default:user.username|upper }}
                     </strong>
                 </div>
-
                 <form method="post" action="{% url 'logout' %}" class="logout-form">
                     {% csrf_token %}
-
                     <button type="submit" class="btn-logout" title="Cerrar Sesión">
                         <i class="fa-solid fa-right-from-bracket"></i>
                         <span class="logout-text">SALIR</span>
@@ -55,17 +58,30 @@
         </div>
     </header>
 
-
     <!-- Contenido Principal -->
     <main class="main-container">
+        
         <div class="form-header-title">
             <h2>
-                <i class="fa-solid fa-desktop"></i>
-                Registro de nuevo equipo
+                <i class="fa-solid fa-desktop"></i> 
+                {% if equipo %}Editar Registro de Equipo{% else %}Registro de nuevo equipo{% endif %}
             </h2>
         </div>
+
+        <!-- Mensajes de Alerta y Validación -->
+        {% if messages %}
+            <div class="messages-container">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        <i class="fa-solid fa-triangle-exclamation"></i> {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
         <form method="post" id="inventory-form" class="inventory-form">
             {% csrf_token %}
+
             <!-- SECCIÓN 1: DATOS DEL FUNCIONARIO -->
             <section class="form-card">
                 <div class="card-header">
@@ -74,68 +90,54 @@
                 </div>
 
                 <div class="form-grid">
+                    <!-- Nombre Completo -->
                     <div class="form-group full-width">
-                        <label for="funcionario_nombre" class="form-label">
-                            Nombre Completo *
-                        </label>
-                        <input type="text" id="funcionario_nombre" name="funcionario_nombre" class="input-text uppercase-input" required>
+                        <label for="funcionario_nombre" class="form-label">Nombre Completo *</label>
+                        <input type="text" id="funcionario_nombre" name="funcionario_nombre" class="input-text uppercase-input" 
+                               value="{{ funcionario.nombre|default:'' }}" required>
                     </div>
 
+                    <!-- Dirección -->
                     <div class="form-group">
-                        <label for="direccion" class="form-label">
-                            Dirección *
-                        </label>
+                        <label for="direccion" class="form-label">Dirección *</label>
                         <select id="direccion" name="direccion" class="select-input" required>
-                            <option value="">
-                                Seleccionar dirección
-                            </option>
+                            <option value="">Seleccionar Dirección</option>
                             {% for d in direcciones %}
-                                <option value="{{ d.id }}">
+                                <option value="{{ d.id }}" {% if funcionario and funcionario.direccion_id == d.id %}selected{% endif %}>
                                     {{ d.nombre }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
 
+                    <!-- Departamento -->
                     <div class="form-group">
-
-                        <label for="departamento" class="form-label">
-                            Departamento *
-                        </label>
-
-                        <select id="departamento" name="departamento" class="select-input" required disabled>
-                            <option value="">
-                                Primero seleccione dirección
-                            </option>
+                        <label for="departamento" class="form-label">Departamento *</label>
+                        <select id="departamento" name="departamento" class="select-input" required {% if not funcionario %}disabled{% endif %}>
+                            <option value="">Primero seleccione Dirección</option>
                             {% for dep in departamentos %}
-                                <option
-                                    value="{{ dep.id }}"
-                                    data-direccion="{{ dep.direccion_id }}">
+                                <option value="{{ dep.id }}" data-direccion="{{ dep.direccion_id }}" 
+                                        {% if funcionario and funcionario.departamento_id == dep.id %}selected{% endif %}>
                                     {{ dep.nombre }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
 
+                    <!-- Anexo (Opcional) -->
                     <div class="form-group">
-
-                        <label for="anexo" class="form-label">
-                            Anexo *
-                        </label>
-                        <input type="text" id="anexo" name="anexo" class="input-text" placeholder="Ej: 6000" maxlength="4" pattern="\d{4}" title="Debe ser un número entero de exactamente 4 dígitos" required>
+                        <label for="anexo" class="form-label">Anexo (opcional)</label>
+                        <input type="text" id="anexo" name="anexo" class="input-text" 
+                            value="{{ funcionario.anexo|default:'' }}" placeholder="Ej: 6000" maxlength="4">
                     </div>
 
+                    <!-- Cargo -->
                     <div class="form-group">
-
-                        <label for="cargo" class="form-label">
-                            Cargo *
-                        </label>
+                        <label for="cargo" class="form-label">Cargo *</label>
                         <select id="cargo" name="cargo" class="select-input" required>
-                            <option value="">
-                                Seleccionar cargo
-                            </option>
+                            <option value="">Seleccionar Cargo</option>
                             {% for c in cargos %}
-                                <option value="{{ c.id }}">
+                                <option value="{{ c.id }}" {% if funcionario and funcionario.cargo_id == c.id %}selected{% endif %}>
                                     {{ c.nombre }}
                                 </option>
                             {% endfor %}
@@ -144,116 +146,121 @@
                 </div>
             </section>
 
-            <!-- SECCIÓN 2: EQUIPO -->
+            <!-- SECCIÓN 2: DATOS DEL EQUIPO -->
             <section class="form-card">
                 <div class="card-header">
                     <i class="fa-solid fa-laptop"></i>
                     <h3>2. Equipo</h3>
                 </div>
+
                 <div class="form-grid">
+                    <!-- Tipo de Equipo -->
                     <div class="form-group">
-                        <label for="tipo_equipo" class="form-label">
-                            Tipo de Equipo *
-                        </label>
+                        <label for="tipo_equipo" class="form-label">Tipo de Equipo *</label>
                         <select id="tipo_equipo" name="tipo_equipo" class="select-input" required>
-                            <option value="">
-                                Seleccionar tipo
-                            </option>
+                            <option value="">Seleccionar Tipo</option>
                             {% for t in tipos_equipo %}
-                                <option value="{{ t.id }}">
+                                <option value="{{ t.id }}" {% if equipo and equipo.tipo_id == t.id %}selected{% endif %}>
                                     {{ t.nombre }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
 
-                    <!-- N° SERIE -->
+                    <!-- Marca (Seleccionable y Obligatorio) -->
                     <div class="form-group">
-                        <label for="numero_serie" class="form-label">
-                            N° de Serie
-                        </label>
+                        <label for="marca" class="form-label">Marca *</label>
+                        <select id="marca" name="marca" class="select-input" required>
+                            <option value="">Seleccionar Marca</option>
+                            {% for m in marcas_equipo %}
+                                <option value="{{ m.id }}" {% if equipo and equipo.marca_id == m.id %}selected{% endif %}>{{ m.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Modelo (Seleccionable y Obligatorio) -->
+                    <div class="form-group">
+                        <label for="modelo" class="form-label">Modelo *</label>
+                        <select id="modelo" name="modelo" class="select-input" required>
+                            <option value="">Seleccionar Modelo</option>
+                            {% for mod in modelos_equipo %}
+                                <option value="{{ mod.id }}" {% if equipo and equipo.modelo_id == mod.id %}selected{% endif %}>{{ mod.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- N° Serie: Escaneo por Cámara / Manual -->
+                    <div class="form-group">
+                        <label for="numero_serie" class="form-label">N° de Serie</label>
                         <div class="input-barcode-wrapper">
-                            <input type="text" id="numero_serie" name="numero_serie" class="input-text" placeholder="Ingresar o escanear N° de serie" autocomplete="off">
-                            <button type="button" id="btn-scan-barcode" class="btn-scan-barcode" title="Escanear código de barras">
+                            <input type="text" id="numero_serie" name="numero_serie" class="input-text" 
+                                   value="{{ equipo.numero_serie|default:'' }}" placeholder="Ingresar o escanear N° de serie" autocomplete="off">
+                            <button type="button" class="btn-scan-barcode" data-target="numero_serie" title="Escanear con cámara">
                                 <i class="fa-solid fa-camera"></i>
-                                <span>
-                                    Escanear
-                                </span>
+                                <span>Escanear</span>
                             </button>
                         </div>
-                        <small class="input-help">
-                            <i class="fa-solid fa-circle-info"></i>
-                            Puede ingresar el número manualmente
-                            o utilizar la cámara para escanearlo.
-                        </small>
                     </div>
 
-                    <!-- N° INVENTARIO -->
+                    <!-- N° Inventario: Escaneo por Cámara / Manual -->
                     <div class="form-group">
-                        <label for="numero_inventario" class="form-label">
-                            N° de Inventario
-                        </label>
-                        <input type="text" id="numero_inventario" name="numero_inventario" class="input-text" placeholder="Ingresar N° inventario">
+                        <label for="numero_inventario" class="form-label">N° de Inventario</label>
+                        <div class="input-barcode-wrapper">
+                            <input type="text" id="numero_inventario" name="numero_inventario" class="input-text" 
+                                   value="{{ equipo.numero_inventario|default:'' }}" placeholder="Ingresar o escanear N° inventario" autocomplete="off">
+                            <button type="button" class="btn-scan-barcode" data-target="numero_inventario" title="Escanear con cámara">
+                                <i class="fa-solid fa-camera"></i>
+                                <span>Escanear</span>
+                            </button>
+                        </div>
                     </div>
 
+                    <!-- RAM -->
                     <div class="form-group">
-                        <label for="ram" class="form-label">
-                            Memoria RAM *
-                        </label>
+                        <label for="ram" class="form-label">Memoria RAM *</label>
                         <select id="ram" name="ram" class="select-input" required>
-                            <option value="">
-                                Seleccionar RAM
-                            </option>
+                            <option value="">Seleccionar RAM</option>
                             {% for r in rams %}
-                                <option value="{{ r.id }}">
+                                <option value="{{ r.id }}" {% if equipo and equipo.ram_id == r.id %}selected{% endif %}>
                                     {{ r.tipo }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
 
+                    <!-- Disco Duro -->
                     <div class="form-group">
-                        <label for="disco" class="form-label">
-                            Disco Duro *
-                        </label>
+                        <label for="disco" class="form-label">Disco Duro *</label>
                         <select id="disco" name="disco" class="select-input" required>
-                            <option value="">
-                                Seleccionar disco
-                            </option>
+                            <option value="">Seleccionar Disco</option>
                             {% for d in discos %}
-                                <option value="{{ d.id }}">
+                                <option value="{{ d.id }}" {% if equipo and equipo.disco_id == d.id %}selected{% endif %}>
                                     {{ d.tipo }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
 
+                    <!-- Procesador -->
                     <div class="form-group">
-
-                        <label for="procesador" class="form-label">
-                            Procesador *
-                        </label>
+                        <label for="procesador" class="form-label">Procesador *</label>
                         <select id="procesador" name="procesador" class="select-input" required>
-                            <option value="">
-                                Seleccionar procesador
-                            </option>
+                            <option value="">Seleccionar Procesador</option>
                             {% for p in procesadores %}
-                                <option value="{{ p.id }}">
+                                <option value="{{ p.id }}" {% if equipo and equipo.procesador_id == p.id %}selected{% endif %}>
                                     {{ p.nombre }}
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
 
+                    <!-- Sistema Operativo -->
                     <div class="form-group">
-                        <label for="sistema_operativo" class="form-label">
-                            Sistema Operativo *
-                        </label>
+                        <label for="sistema_operativo" class="form-label">Sistema Operativo *</label>
                         <select id="sistema_operativo" name="sistema_operativo" class="select-input" required>
-                            <option value="">
-                                Seleccionar sistema operativo
+                            <option value="">Seleccionar S.O.</option>
                             {% for so in sistemas_operativos %}
-                                <option value="{{ so.id }}">
+                                <option value="{{ so.id }}" {% if equipo and equipo.sistema_operativo_id == so.id %}selected{% endif %}>
                                     {{ so.tipo }}
                                 </option>
                             {% endfor %}
@@ -262,7 +269,7 @@
                 </div>
             </section>
 
-            <!-- SECCIÓN 3: MONITOR -->
+            <!-- SECCIÓN 3: MONITOR (CONDICIONAL) -->
             <section class="form-card">
                 <div class="card-header">
                     <i class="fa-solid fa-display"></i>
@@ -270,110 +277,150 @@
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="tiene_monitor" class="form-label">
-                            ¿Tiene Monitor? *
-                        </label>
+                        <label for="tiene_monitor" class="form-label">¿Tiene Monitor? *</label>
                         <select id="tiene_monitor" name="tiene_monitor" class="select-input" required>
-                            <option value="">
-                                Seleccionar
-                            </option>
-                            <option value="si">
-                                Sí
-                            </option>
-                            <option value="no">
-                                No
-                            </option>
+                            <option value="">Seleccionar</option>
+                            <option value="si" {% if equipo and equipo.tiene_monitor %}selected{% endif %}>Sí</option>
+                            <option value="no" {% if equipo and not equipo.tiene_monitor %}selected{% endif %}>No</option>
                         </select>
                     </div>
-                    <div class="form-group" id="group-cantidad-monitor" style="display: none;">
-                        <label for="cantidad_monitores" class="form-label">
-                            ¿Cuántos Monitores?
-                        </label>
-                        <select
-                            id="cantidad_monitores" name="cantidad_monitores" class="select-input">
-                            <option value="">
-                                Cantidad
-                            </option>
-                            <option value="1">
-                                1 monitor
-                            </option>
-                            <option value="2">
-                                2 monitores
-                            </option>
+
+                    <div class="form-group {% if not equipo or not equipo.tiene_monitor %}is-hidden{% endif %}" id="group-cantidad-monitor">
+                        <label for="cantidad_monitores" class="form-label">¿Cuántos Monitores?</label>
+                        <select id="cantidad_monitores" name="cantidad_monitores" class="select-input">
+                            <option value="">Cantidad</option>
+                            <option value="1" {% if equipo and equipo.monitores.count == 1 %}selected{% endif %}>1 Monitor</option>
+                            <option value="2" {% if equipo and equipo.monitores.count == 2 %}selected{% endif %}>2 Monitores</option>
                         </select>
                     </div>
                 </div>
-                <!-- Monitor 1 -->
-                <div id="block-monitor-1" class="sub-card-monitor" style="display: none;">
-                    <h4>
-                        <i class="fa-solid fa-tv"></i>
-                        Pantalla 1
-                    </h4>
+
+                <!-- Bloque Pantalla 1 -->
+                <div id="block-monitor-1" class="sub-card-monitor {% if not equipo or not equipo.tiene_monitor %}is-hidden{% endif %}">
+                    <h4><i class="fa-solid fa-tv"></i> Pantalla 1</h4>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label
-                                for="monitor1_pulgadas"
-                                class="form-label">
-                                Pulgadas *
-                            </label>
+                            <label for="monitor1_marca" class="form-label">Marca</label>
+                            <select name="monitor1_marca" class="select-input">
+                                <option value="">Seleccionar Marca</option>
+                                {% for m in marcas_monitor %}
+                                    <option value="{{ m.id }}" {% if monitor1 and monitor1.marca_id == m.id %}selected{% endif %}>{{ m.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="monitor1_modelo" class="form-label">Modelo</label>
+                            <select name="monitor1_modelo" class="select-input">
+                                <option value="">Seleccionar Modelo</option>
+                                {% for mod in modelos_monitor %}
+                                    <option value="{{ mod.id }}" {% if monitor1 and monitor1.modelo_id == mod.id %}selected{% endif %}>{{ mod.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="monitor1_pulgadas" class="form-label">Pulgadas *</label>
                             <select id="monitor1_pulgadas" name="monitor1_pulgadas" class="select-input">
-                                <option value="">
-                                    Seleccionar pulgadas
-                                </option>
+                                <option value="">Seleccionar Pulgadas</option>
                                 {% for p in pulgadas_monitor %}
-                                    <option value="{{ p.id }}">
-                                        {{ p }}
+                                    <option value="{{ p.id }}" {% if monitor1 and monitor1.pulgadas_id == p.id %}selected{% endif %}>
+                                        {{ p.tipo|default:p }}
                                     </option>
                                 {% endfor %}
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label for="monitor1_numero_serie" class="form-label">N° de Serie</label>
+                            <div class="input-barcode-wrapper">
+                                <input type="text" id="monitor1_numero_serie" name="monitor1_numero_serie" class="input-text" 
+                                       value="{{ monitor1.numero_serie|default:'' }}" placeholder="N° de serie pantalla 1" autocomplete="off">
+                                <button type="button" class="btn-scan-barcode" data-target="monitor1_numero_serie" title="Escanear">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="monitor1_numero_inventario" class="form-label">N° de Inventario</label>
+                            <div class="input-barcode-wrapper">
+                                <input type="text" id="monitor1_numero_inventario" name="monitor1_numero_inventario" class="input-text" 
+                                       value="{{ monitor1.numero_inventario|default:'' }}" placeholder="N° de inventario pantalla 1" autocomplete="off">
+                                <button type="button" class="btn-scan-barcode" data-target="monitor1_numero_inventario" title="Escanear">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                            </div>
+                        </div>
                         <div class="form-group checkbox-group">
                             <label class="checkbox-label">
-                                <input type="checkbox" id="monitor1_hdmi" name="monitor1_hdmi" value="True">
-                                <span>
-                                    ¿Posee HDMI?
-                                </span>
+                                <input type="checkbox" id="monitor1_hdmi" name="monitor1_hdmi" value="True" {% if monitor1 and monitor1.hdmi %}checked{% endif %}>
+                                <span>¿Posee HDMI?</span>
                             </label>
                         </div>
                     </div>
                 </div>
-                <!-- Monitor 2 -->
-                <div id="block-monitor-2" class="sub-card-monitor" style="display: none;">
-                    <h4>
-                        <i class="fa-solid fa-tv"></i>
-                        Pantalla 2
-                    </h4>
+
+                <!-- Bloque Pantalla 2 -->
+                <div id="block-monitor-2" class="sub-card-monitor {% if not equipo or equipo.monitores.count < 2 %}is-hidden{% endif %}">
+                    <h4><i class="fa-solid fa-tv"></i> Pantalla 2</h4>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label for="monitor2_pulgadas" class="form-label">
-                                Pulgadas *
-                            </label>
+                            <label for="monitor2_marca" class="form-label">Marca</label>
+                            <select name="monitor2_marca" class="select-input">
+                                <option value="">Seleccionar Marca</option>
+                                {% for m in marcas_monitor %}
+                                    <option value="{{ m.id }}" {% if monitor2 and monitor2.marca_id == m.id %}selected{% endif %}>{{ m.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="monitor2_modelo" class="form-label">Modelo</label>
+                            <select name="monitor2_modelo" class="select-input">
+                                <option value="">Seleccionar Modelo</option>
+                                {% for mod in modelos_monitor %}
+                                    <option value="{{ mod.id }}" {% if monitor2 and monitor2.modelo_id == mod.id %}selected{% endif %}>{{ mod.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="monitor2_pulgadas" class="form-label">Pulgadas *</label>
                             <select id="monitor2_pulgadas" name="monitor2_pulgadas" class="select-input">
-                                <option value="">
-                                    Seleccionar pulgadas
-                                </option>
-
+                                <option value="">Seleccionar Pulgadas</option>
                                 {% for p in pulgadas_monitor %}
-                                    <option value="{{ p.id }}">
-                                        {{ p }}
+                                    <option value="{{ p.id }}" {% if monitor2 and monitor2.pulgadas_id == p.id %}selected{% endif %}>
+                                        {{ p.tipo|default:p }}
                                     </option>
                                 {% endfor %}
-
                             </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="monitor2_numero_serie" class="form-label">N° de Serie</label>
+                            <div class="input-barcode-wrapper">
+                                <input type="text" id="monitor2_numero_serie" name="monitor2_numero_serie" class="input-text" 
+                                       value="{{ monitor2.numero_serie|default:'' }}" placeholder="N° de serie pantalla 2" autocomplete="off">
+                                <button type="button" class="btn-scan-barcode" data-target="monitor2_numero_serie" title="Escanear">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="monitor2_numero_inventario" class="form-label">N° de Inventario</label>
+                            <div class="input-barcode-wrapper">
+                                <input type="text" id="monitor2_numero_inventario" name="monitor2_numero_inventario" class="input-text" 
+                                       value="{{ monitor2.numero_inventario|default:'' }}" placeholder="N° de inventario pantalla 2" autocomplete="off">
+                                <button type="button" class="btn-scan-barcode" data-target="monitor2_numero_inventario" title="Escanear">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group checkbox-group">
                             <label class="checkbox-label">
-                                <input type="checkbox" id="monitor2_hdmi" name="monitor2_hdmi" value="True">
-                                <span>
-                                    ¿Posee HDMI?
-                                </span>
+                                <input type="checkbox" id="monitor2_hdmi" name="monitor2_hdmi" value="True" {% if monitor2 and monitor2.hdmi %}checked{% endif %}>
+                                <span>¿Posee HDMI?</span>
                             </label>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- SECCIÓN 4: IMPRESORA -->
+            <!-- SECCIÓN 4: IMPRESORA (CONDICIONAL) -->
             <section class="form-card">
                 <div class="card-header">
                     <i class="fa-solid fa-print"></i>
@@ -381,70 +428,80 @@
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="tiene_impresora" class="form-label">
-                            ¿Tiene Impresora? *
-                        </label>
+                        <label for="tiene_impresora" class="form-label">¿Tiene Impresora? *</label>
                         <select id="tiene_impresora" name="tiene_impresora" class="select-input" required>
-                            <option value="">
-                                Seleccionar
-                            </option>
-                            <option value="si">
-                                Sí
-                            </option>
-                            <option value="no">
-                                No
-                            </option>
+                            <option value="">Seleccionar</option>
+                            <option value="si" {% if equipo and equipo.tiene_impresora %}selected{% endif %}>Sí</option>
+                            <option value="no" {% if equipo and not equipo.tiene_impresora %}selected{% endif %}>No</option>
                         </select>
                     </div>
-                    <div class="form-group" id="group-tipo-impresora" style="display: none;">
-                        <label
-                            for="tipo_impresora"
-                            class="form-label"
-                        >
-                            Tipo de Impresora *
-                        </label>
-                        <select id="tipo_impresora" name="tipo_impresora" class="select-input">
-                            <option value="">
-                                Seleccionar tipo
-                            </option>
-                            {% for imp in tipos_impresora %}
-                                <option value="{{ imp.id }}">
-                                    {{ imp.nombre }}
-                                </option>
-                            {% endfor %}
-                        </select>
+                </div>
+
+                <div id="group-tipo-impresora" class="{% if not equipo or not equipo.tiene_impresora %}is-hidden{% endif %}" style="margin-top: 15px;">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="impresora_marca" class="form-label">Marca</label>
+                            <select id="impresora_marca" name="impresora_marca" class="select-input">
+                                <option value="">Seleccionar Marca</option>
+                                {% for m in marcas_impresora %}
+                                    <option value="{{ m.id }}" {% if equipo and equipo.marca_impresora_id == m.id %}selected{% endif %}>{{ m.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="impresora_modelo" class="form-label">Modelo</label>
+                            <select id="impresora_modelo" name="impresora_modelo" class="select-input">
+                                <option value="">Seleccionar Modelo</option>
+                                {% for mod in modelos_impresora %}
+                                    <option value="{{ mod.id }}" {% if equipo and equipo.modelo_impresora_id == mod.id %}selected{% endif %}>{{ mod.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="impresora_numero_serie" class="form-label">N° de Serie</label>
+                            <div class="input-barcode-wrapper">
+                                <input type="text" id="impresora_numero_serie" name="impresora_numero_serie" class="input-text" 
+                                       value="{{ equipo.numero_serie_impresora|default:'' }}" placeholder="N° de serie impresora" autocomplete="off">
+                                <button type="button" class="btn-scan-barcode" data-target="impresora_numero_serie" title="Escanear">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="impresora_numero_inventario" class="form-label">N° de Inventario</label>
+                            <div class="input-barcode-wrapper">
+                                <input type="text" id="impresora_numero_inventario" name="impresora_numero_inventario" class="input-text" 
+                                       value="{{ equipo.numero_inventario_impresora|default:'' }}" placeholder="N° de inventario impresora" autocomplete="off">
+                                <button type="button" class="btn-scan-barcode" data-target="impresora_numero_inventario" title="Escanear">
+                                    <i class="fa-solid fa-camera"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
 
-            <!-- BOTONES -->
+            <!-- BOTONES DE ACCIÓN -->
             <div class="form-actions-bar">
                 <a href="{% url 'inicio' %}" class="btn-secondary">
-                    <i class="fa-solid fa-xmark"></i>
-                    Cancelar
+                    <i class="fa-solid fa-xmark"></i> Cancelar
                 </a>
                 <button type="submit" class="btn-primary">
-                    <i class="fa-solid fa-floppy-disk"></i>
-                    Guardar Registro
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar Registro
                 </button>
             </div>
         </form>
+
     </main>
 
-    <!-- MODAL LECTOR DE CÓDIGO DE BARRAS -->
+    <!-- MODAL VENTANA FLOTANTE PARA LA CÁMARA ESCÁNER -->
     <div id="barcode-modal" class="barcode-modal" aria-hidden="true">
         <div class="barcode-modal-content">
             <div class="barcode-modal-header">
                 <div>
-                    <h3>
-                        <i class="fa-solid fa-camera"></i>
-                        Escanear N° de Serie
-                    </h3>
-                    <p>
-                        Apunte la cámara hacia el código de barras
-                    </p>
+                    <h3><i class="fa-solid fa-camera"></i> Escanear Código de Barras / QR</h3>
+                    <p>Apunte la cámara hacia el código</p>
                 </div>
-
                 <button type="button" id="btn-close-scanner" class="btn-close-scanner" title="Cerrar">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -454,27 +511,23 @@
                 <div id="barcode-reader"></div>
                 <div id="scanner-loading" class="scanner-loading">
                     <i class="fa-solid fa-spinner fa-spin"></i>
-                    <span>
-                        Iniciando cámara...
-                    </span>
+                    <span>Iniciando cámara...</span>
                 </div>
             </div>
 
             <div id="scanner-status" class="scanner-status">
                 <i class="fa-solid fa-barcode"></i>
-                <span>
-                    Esperando código de barras...
-                </span>
+                <span>Esperando código...</span>
             </div>
+
             <div class="barcode-modal-actions">
                 <button type="button" id="btn-cancel-scanner" class="btn-secondary scanner-cancel-button">
-                    <i class="fa-solid fa-xmark"></i>
-                    Cancelar
+                    <i class="fa-solid fa-xmark"></i> Cancelar
                 </button>
             </div>
         </div>
     </div>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
     <!-- JS de Lógica Dinámica y Validaciones -->
     <script src="{% static 'js/form.js' %}"></script>
 </body>

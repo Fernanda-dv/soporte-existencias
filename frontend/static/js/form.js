@@ -1,1049 +1,226 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
-
-    // ============================================================
-    // 1. TRANSFORMAR NOMBRE DE FUNCIONARIO A MAYÚSCULAS
-    // ============================================================
-
-    const inputNombre = document.getElementById('funcionario_nombre');
-
-    if (inputNombre) {
-
-        inputNombre.addEventListener('input', function() {
-
-            this.value = this.value.toUpperCase();
-
-        });
-
-    }
-
-
-
-    // ============================================================
-    // 2. FILTRO DINÁMICO DE DEPARTAMENTO SEGÚN DIRECCIÓN
-    // ============================================================
-
+    // ==========================================
+    // 1. FILTRADO DINÁMICO DE DEPARTAMENTOS POR DIRECCIÓN
+    // ==========================================
     const selectDireccion = document.getElementById('direccion');
     const selectDepartamento = document.getElementById('departamento');
 
     if (selectDireccion && selectDepartamento) {
+        function filtrarDepartamentos() {
+            const direccionId = selectDireccion.value;
+            const opcionesDepto = selectDepartamento.querySelectorAll('option');
 
-        const optionsDepartamento =
-            Array.from(
-                selectDepartamento.querySelectorAll(
-                    'option[data-direccion]'
-                )
-            );
-
-
-        selectDireccion.addEventListener('change', function() {
-
-            const direccionId = this.value;
-
-
-            // Restablecer selección
-            selectDepartamento.value = '';
-
-
-            if (direccionId) {
-
-                selectDepartamento.disabled = false;
-
-
-                optionsDepartamento.forEach(function(option) {
-
-                    if (
-                        option.getAttribute('data-direccion')
-                        === direccionId
-                    ) {
-
-                        option.style.display = 'block';
-
-                    } else {
-
-                        option.style.display = 'none';
-
-                    }
-
-                });
-
-            } else {
-
+            if (!direccionId) {
+                selectDepartamento.value = '';
                 selectDepartamento.disabled = true;
-
+                opcionesDepto.forEach(opt => {
+                    if (opt.value !== '') opt.style.display = 'none';
+                });
+                return;
             }
 
-        });
+            selectDepartamento.disabled = false;
+            let algunSeleccionado = false;
 
-    }
+            opcionesDepto.forEach(opt => {
+                if (opt.value === '') {
+                    opt.style.display = 'block';
+                    return;
+                }
+                const deptoDir = opt.getAttribute('data-direccion');
+                if (deptoDir === direccionId) {
+                    opt.style.display = 'block';
+                    if (opt.selected) algunSeleccionado = true;
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
 
-
-
-    // ============================================================
-    // 3. VALIDACIÓN DE ANEXO
-    // ============================================================
-
-    const inputAnexo = document.getElementById('anexo');
-
-    if (inputAnexo) {
-
-        inputAnexo.addEventListener('input', function() {
-
-            // Permitir solamente números
-            this.value = this.value.replace(/\D/g, '');
-
-        });
-
-    }
-
-
-
-    // ============================================================
-    // 4. LÓGICA CONDICIONAL DE MONITORES
-    // ============================================================
-
-    const selectTieneMonitor =
-        document.getElementById('tiene_monitor');
-
-    const groupCantidadMonitor =
-        document.getElementById('group-cantidad-monitor');
-
-    const selectCantidadMonitores =
-        document.getElementById('cantidad_monitores');
-
-
-    const blockMonitor1 =
-        document.getElementById('block-monitor-1');
-
-    const blockMonitor2 =
-        document.getElementById('block-monitor-2');
-
-
-    const inputPulgadas1 =
-        document.getElementById('monitor1_pulgadas');
-
-    const inputPulgadas2 =
-        document.getElementById('monitor2_pulgadas');
-
-
-    const inputHdmi1 =
-        document.getElementById('monitor1_hdmi');
-
-    const inputHdmi2 =
-        document.getElementById('monitor2_hdmi');
-
-
-
-    function updateMonitorState() {
-
-        if (!selectTieneMonitor) {
-            return;
+            // Si el departamento seleccionado previamente no corresponde a la nueva dirección, limpiar
+            if (!algunSeleccionado && !selectDepartamento.getAttribute('data-initial-loaded')) {
+                selectDepartamento.value = '';
+            }
+            selectDepartamento.removeAttribute('data-initial-loaded');
         }
 
+        // Marcar carga inicial para modo edición
+        if (selectDepartamento.value) {
+            selectDepartamento.setAttribute('data-initial-loaded', 'true');
+        }
 
-        const tieneMonitor =
-            selectTieneMonitor.value === 'si';
+        selectDireccion.addEventListener('change', filtrarDepartamentos);
+        filtrarDepartamentos(); // Ejecutar al cargar
+    }
 
 
-        if (tieneMonitor) {
+    // ==========================================
+    // 2. DESPLIEGUE PROGRESIVO DE SECCIÓN MONITOR
+    // ==========================================
+    const selectTieneMonitor = document.getElementById('tiene_monitor');
+    const groupCantidadMonitor = document.getElementById('group-cantidad-monitor');
+    const selectCantidadMonitores = document.getElementById('cantidad_monitores');
+    const blockMonitor1 = document.getElementById('block-monitor-1');
+    const blockMonitor2 = document.getElementById('block-monitor-2');
 
-            groupCantidadMonitor.style.display = 'block';
+    function actualizarVisibilidadMonitores() {
+        if (!selectTieneMonitor) return;
 
-            selectCantidadMonitores.required = true;
+        const tieneMonitor = selectTieneMonitor.value;
 
-            updateMonitorBlocks();
+        if (tieneMonitor === 'si') {
+            // Mostrar la pregunta de cantidad
+            if (groupCantidadMonitor) groupCantidadMonitor.classList.remove('is-hidden');
 
+            // Evaluar cuántos monitores hay seleccionados
+            const cantidad = selectCantidadMonitores ? selectCantidadMonitores.value : '';
+
+            if (cantidad === '1') {
+                if (blockMonitor1) blockMonitor1.classList.remove('is-hidden');
+                if (blockMonitor2) blockMonitor2.classList.add('is-hidden');
+            } else if (cantidad === '2') {
+                if (blockMonitor1) blockMonitor1.classList.remove('is-hidden');
+                if (blockMonitor2) blockMonitor2.classList.remove('is-hidden');
+            } else {
+                // Si aún no elige cantidad, mantener pantallas ocultas
+                if (blockMonitor1) blockMonitor1.classList.add('is-hidden');
+                if (blockMonitor2) blockMonitor2.classList.add('is-hidden');
+            }
         } else {
+            // Si selecciona "No" o está en blanco, ocultar todo el grupo
+            if (groupCantidadMonitor) groupCantidadMonitor.classList.add('is-hidden');
+            if (blockMonitor1) blockMonitor1.classList.add('is-hidden');
+            if (blockMonitor2) blockMonitor2.classList.add('is-hidden');
 
-            groupCantidadMonitor.style.display = 'none';
-
-            selectCantidadMonitores.required = false;
-
-            selectCantidadMonitores.value = '';
-
-
-            blockMonitor1.style.display = 'none';
-
-            blockMonitor2.style.display = 'none';
-
-
-            inputPulgadas1.required = false;
-
-            inputPulgadas1.value = '';
-
-            inputHdmi1.checked = false;
-
-
-            inputPulgadas2.required = false;
-
-            inputPulgadas2.value = '';
-
-            inputHdmi2.checked = false;
-
+            // Limpiar selección de cantidad si cambió a No
+            if (tieneMonitor === 'no' && selectCantidadMonitores) {
+                selectCantidadMonitores.value = '';
+            }
         }
-
     }
-
-
-
-    function updateMonitorBlocks() {
-
-        if (!selectCantidadMonitores) {
-            return;
-        }
-
-
-        const cantidad =
-            parseInt(selectCantidadMonitores.value) || 0;
-
-
-
-        // Monitor 1
-
-        if (cantidad >= 1) {
-
-            blockMonitor1.style.display = 'block';
-
-            inputPulgadas1.required = true;
-
-        } else {
-
-            blockMonitor1.style.display = 'none';
-
-            inputPulgadas1.required = false;
-
-            inputPulgadas1.value = '';
-
-            inputHdmi1.checked = false;
-
-        }
-
-
-
-        // Monitor 2
-
-        if (cantidad === 2) {
-
-            blockMonitor2.style.display = 'block';
-
-            inputPulgadas2.required = true;
-
-        } else {
-
-            blockMonitor2.style.display = 'none';
-
-            inputPulgadas2.required = false;
-
-            inputPulgadas2.value = '';
-
-            inputHdmi2.checked = false;
-
-        }
-
-    }
-
-
 
     if (selectTieneMonitor) {
-
-        selectTieneMonitor.addEventListener(
-            'change',
-            updateMonitorState
-        );
-
+        selectTieneMonitor.addEventListener('change', actualizarVisibilidadMonitores);
     }
-
-
     if (selectCantidadMonitores) {
-
-        selectCantidadMonitores.addEventListener(
-            'change',
-            updateMonitorBlocks
-        );
-
+        selectCantidadMonitores.addEventListener('change', actualizarVisibilidadMonitores);
     }
 
+    // Ejecutar al inicio para establecer estado (oculto en nuevo, visible si edita)
+    actualizarVisibilidadMonitores();
 
 
-    // ============================================================
-    // 5. LÓGICA CONDICIONAL DE IMPRESORA
-    // ============================================================
+    // ==========================================
+    // 3. DESPLIEGUE PROGRESIVO DE SECCIÓN IMPRESORA
+    // ==========================================
+    const selectTieneImpresora = document.getElementById('tiene_impresora');
+    const groupTipoImpresora = document.getElementById('group-tipo-impresora');
 
-    const selectTieneImpresora =
-        document.getElementById('tiene_impresora');
+    function actualizarVisibilidadImpresora() {
+        if (!selectTieneImpresora || !groupTipoImpresora) return;
 
-    const groupTipoImpresora =
-        document.getElementById('group-tipo-impresora');
-
-    const selectTipoImpresora =
-        document.getElementById('tipo_impresora');
-
-
-
-    function updateImpresoraState() {
-
-        if (!selectTieneImpresora) {
-            return;
-        }
-
-
-        const tieneImpresora =
-            selectTieneImpresora.value === 'si';
-
-
-        if (tieneImpresora) {
-
-            groupTipoImpresora.style.display = 'block';
-
-            selectTipoImpresora.required = true;
-
+        if (selectTieneImpresora.value === 'si') {
+            groupTipoImpresora.classList.remove('is-hidden');
         } else {
-
-            groupTipoImpresora.style.display = 'none';
-
-            selectTipoImpresora.required = false;
-
-            selectTipoImpresora.value = '';
-
+            groupTipoImpresora.classList.add('is-hidden');
         }
-
     }
-
-
 
     if (selectTieneImpresora) {
-
-        selectTieneImpresora.addEventListener(
-            'change',
-            updateImpresoraState
-        );
-
+        selectTieneImpresora.addEventListener('change', actualizarVisibilidadImpresora);
     }
 
+    // Ejecutar al inicio para establecer estado
+    actualizarVisibilidadImpresora();
 
 
-    // ============================================================
-    // 6. LECTOR DE CÓDIGO DE BARRAS CON CÁMARA
-    // ============================================================
-
-    const numeroSerie =
-        document.getElementById('numero_serie');
-
-    const btnScanBarcode =
-        document.getElementById('btn-scan-barcode');
-
-    const barcodeModal =
-        document.getElementById('barcode-modal');
-
-    const btnCloseScanner =
-        document.getElementById('btn-close-scanner');
-
-    const btnCancelScanner =
-        document.getElementById('btn-cancel-scanner');
-
-    const scannerStatus =
-        document.getElementById('scanner-status');
-
-    const scannerLoading =
-        document.getElementById('scanner-loading');
-
-    const barcodeReader =
-        document.getElementById('barcode-reader');
-
-
+    // ==========================================
+    // 4. LÓGICA DEL LECTOR DE CÓDIGO DE BARRAS / QR (CÁMARA)
+    // ==========================================
+    const modalScanner = document.getElementById('barcode-modal');
+    const btnCloseScanner = document.getElementById('btn-close-scanner');
+    const btnCancelScanner = document.getElementById('btn-cancel-scanner');
+    const scannerStatus = document.getElementById('scanner-status');
+    const scannerLoading = document.getElementById('scanner-loading');
 
     let html5QrCode = null;
+    let currentTargetInputId = null;
 
-    let scannerRunning = false;
+    // Vincular todos los botones con la clase .btn-scan-barcode
+    document.querySelectorAll('.btn-scan-barcode').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const targetId = this.getAttribute('data-target');
+            if (targetId) {
+                currentTargetInputId = targetId;
+                abrirModalScanner();
+            }
+        });
+    });
 
-    let scannerStarting = false;
-
-
-
-    // ------------------------------------------------------------
-    // Actualizar mensaje del lector
-    // ------------------------------------------------------------
-
-    function setScannerStatus(message, type = 'normal') {
-
-        if (!scannerStatus) {
-            return;
-        }
-
-
-        let icon = 'fa-barcode';
-
-
-        if (type === 'success') {
-
-            icon = 'fa-circle-check';
-
-        } else if (type === 'error') {
-
-            icon = 'fa-circle-exclamation';
-
-        } else if (type === 'loading') {
-
-            icon = 'fa-spinner fa-spin';
-
-        }
-
-
-        scannerStatus.innerHTML = `
-            <i class="fa-solid ${icon}"></i>
-            <span>${message}</span>
-        `;
-
-
-        scannerStatus.classList.remove(
-            'scanner-success',
-            'scanner-error'
-        );
-
-
-        if (type === 'success') {
-
-            scannerStatus.classList.add(
-                'scanner-success'
-            );
-
-        }
-
-
-        if (type === 'error') {
-
-            scannerStatus.classList.add(
-                'scanner-error'
-            );
-
-        }
-
+    function abrirModalScanner() {
+        if (!modalScanner) return;
+        modalScanner.style.display = 'flex';
+        modalScanner.setAttribute('aria-hidden', 'false');
+        iniciarCamara();
     }
 
-
-
-    // ------------------------------------------------------------
-    // Abrir modal
-    // ------------------------------------------------------------
-
-    function openScannerModal() {
-
-        if (!barcodeModal) {
-            return;
-        }
-
-
-        barcodeModal.classList.add('active');
-
-        barcodeModal.setAttribute(
-            'aria-hidden',
-            'false'
-        );
-
-
-        document.body.classList.add(
-            'scanner-open'
-        );
-
-
-        if (scannerLoading) {
-
-            scannerLoading.style.display = 'flex';
-
-        }
-
-
-        setScannerStatus(
-            'Iniciando cámara...',
-            'loading'
-        );
-
-
-        startBarcodeScanner();
-
+    function cerrarModalScanner() {
+        if (!modalScanner) return;
+        detenerCamara().then(() => {
+            modalScanner.style.display = 'none';
+            modalScanner.setAttribute('aria-hidden', 'true');
+        });
     }
 
+    if (btnCloseScanner) btnCloseScanner.addEventListener('click', cerrarModalScanner);
+    if (btnCancelScanner) btnCancelScanner.addEventListener('click', cerrarModalScanner);
 
+    function iniciarCamara() {
+        if (scannerLoading) scannerLoading.style.display = 'flex';
+        if (scannerStatus) scannerStatus.innerHTML = '<i class="fa-solid fa-barcode"></i><span>Iniciando cámara...</span>';
 
-    // ------------------------------------------------------------
-    // Cerrar modal
-    // ------------------------------------------------------------
+        html5QrCode = new Html5Qrcode("barcode-reader");
+        const config = { fps: 10, qrbox: { width: 250, height: 150 } };
 
-    async function closeScannerModal() {
-
-        await stopBarcodeScanner();
-
-
-        if (barcodeModal) {
-
-            barcodeModal.classList.remove(
-                'active'
-            );
-
-            barcodeModal.setAttribute(
-                'aria-hidden',
-                'true'
-            );
-
-        }
-
-
-        document.body.classList.remove(
-            'scanner-open'
-        );
-
+        html5QrCode.start(
+            { facingMode: "environment" },
+            config,
+            onScanSuccess
+        ).then(() => {
+            if (scannerLoading) scannerLoading.style.display = 'none';
+            if (scannerStatus) scannerStatus.innerHTML = '<i class="fa-solid fa-camera"></i><span>Apunte al código de barras</span>';
+        }).catch(err => {
+            if (scannerLoading) scannerLoading.style.display = 'none';
+            if (scannerStatus) scannerStatus.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i><span>Error al acceder a la cámara.</span>`;
+        });
     }
 
-
-
-    // ------------------------------------------------------------
-    // Iniciar lector
-    // ------------------------------------------------------------
-
-    async function startBarcodeScanner() {
-
-        if (
-            scannerRunning ||
-            scannerStarting
-        ) {
-            return;
+    function onScanSuccess(decodedText) {
+        if (currentTargetInputId) {
+            const inputTarget = document.getElementById(currentTargetInputId);
+            if (inputTarget) {
+                inputTarget.value = decodedText.trim();
+                // Destacar visualmente el campo actualizado
+                inputTarget.style.borderColor = '#10174A';
+                inputTarget.style.backgroundColor = '#eef2ff';
+                setTimeout(() => {
+                    inputTarget.style.borderColor = '';
+                    inputTarget.style.backgroundColor = '';
+                }, 1500);
+            }
         }
-
-
-        if (
-            typeof Html5Qrcode === 'undefined'
-        ) {
-
-            setScannerStatus(
-                'No se pudo cargar el lector de códigos.',
-                'error'
-            );
-
-            if (scannerLoading) {
-                scannerLoading.style.display = 'none';
-            }
-
-            return;
+        if (scannerStatus) {
+            scannerStatus.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>Código detectado: ${decodedText}</span>`;
         }
-
-
-        scannerStarting = true;
-
-
-        try {
-
-            html5QrCode =
-                new Html5Qrcode(
-                    'barcode-reader'
-                );
-
-
-            // Códigos de barras que se intentarán reconocer.
-            const formatsToSupport = [
-
-                Html5QrcodeSupportedFormats.CODE_128,
-
-                Html5QrcodeSupportedFormats.CODE_39,
-
-                Html5QrcodeSupportedFormats.CODE_93,
-
-                Html5QrcodeSupportedFormats.EAN_13,
-
-                Html5QrcodeSupportedFormats.EAN_8,
-
-                Html5QrcodeSupportedFormats.UPC_A,
-
-                Html5QrcodeSupportedFormats.UPC_E,
-
-                Html5QrcodeSupportedFormats.ITF
-
-            ];
-
-
-            const config = {
-
-                fps: 10,
-
-                qrbox: function(
-                    viewfinderWidth,
-                    viewfinderHeight
-                ) {
-
-                    const minEdge =
-                        Math.min(
-                            viewfinderWidth,
-                            viewfinderHeight
-                        );
-
-
-                    return {
-
-                        width: Math.floor(
-                            minEdge * 0.85
-                        ),
-
-                        height: Math.floor(
-                            minEdge * 0.35
-                        )
-
-                    };
-
-                },
-
-                aspectRatio: 1.777778,
-
-                formatsToSupport:
-                    formatsToSupport,
-
-                disableFlip: false
-
-            };
-
-
-
-            // Preferimos cámara trasera en teléfonos/tablets.
-            const cameraConfig = {
-                facingMode: {
-                    exact: 'environment'
-                }
-            };
-
-
-            try {
-
-                await html5QrCode.start(
-
-                    cameraConfig,
-
-                    config,
-
-                    onBarcodeScanned,
-
-                    onBarcodeScanError
-
-                );
-
-            } catch (environmentCameraError) {
-
-                console.warn(
-                    'No fue posible iniciar la cámara trasera:',
-                    environmentCameraError
-                );
-
-
-                // Si no existe cámara trasera o no se puede
-                // acceder a ella, utilizamos cualquier cámara.
-                const cameras =
-                    await Html5Qrcode.getCameras();
-
-
-                if (
-                    !cameras ||
-                    cameras.length === 0
-                ) {
-
-                    throw new Error(
-                        'No se encontró ninguna cámara disponible.'
-                    );
-
-                }
-
-
-                await html5QrCode.start(
-
-                    cameras[0].id,
-
-                    config,
-
-                    onBarcodeScanned,
-
-                    onBarcodeScanError
-
-                );
-
-            }
-
-
-            scannerRunning = true;
-
-
-            if (scannerLoading) {
-
-                scannerLoading.style.display = 'none';
-
-            }
-
-
-            setScannerStatus(
-                'Apunte la cámara hacia el código de barras.',
-                'normal'
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                'Error iniciando lector:',
-                error
-            );
-
-
-            scannerRunning = false;
-
-
-            if (scannerLoading) {
-
-                scannerLoading.style.display = 'none';
-
-            }
-
-
-            let message =
-                'No fue posible acceder a la cámara.';
-
-
-            if (
-                error &&
-                error.message
-            ) {
-
-                message =
-                    error.message;
-
-            }
-
-
-            setScannerStatus(
-                message,
-                'error'
-            );
-
-
-        } finally {
-
-            scannerStarting = false;
-
-        }
-
+        cerrarModalScanner();
     }
 
-
-
-    // ------------------------------------------------------------
-    // Código detectado
-    // ------------------------------------------------------------
-
-    async function onBarcodeScanned(
-        decodedText,
-        decodedResult
-    ) {
-
-        console.log(
-            'Código detectado:',
-            decodedText
-        );
-
-
-        if (!decodedText) {
-            return;
+    function detenerCamara() {
+        if (html5QrCode && html5QrCode.isScanning) {
+            return html5QrCode.stop().then(() => {
+                html5QrCode.clear();
+            }).catch(() => {});
         }
-
-
-        // Escribir el código en el campo N° de Serie.
-        if (numeroSerie) {
-
-            numeroSerie.value =
-                decodedText.trim();
-
-
-            // Lanzar evento por si existe otra lógica
-            // conectada al campo.
-            numeroSerie.dispatchEvent(
-                new Event(
-                    'input',
-                    {
-                        bubbles: true
-                    }
-                )
-            );
-
-            numeroSerie.dispatchEvent(
-                new Event(
-                    'change',
-                    {
-                        bubbles: true
-                    }
-                )
-            );
-
-        }
-
-
-        setScannerStatus(
-            'Código detectado correctamente.',
-            'success'
-        );
-
-
-        // Detener la cámara.
-        await stopBarcodeScanner();
-
-
-        // Cerrar el modal después de una pequeña pausa.
-        setTimeout(function() {
-
-            if (barcodeModal) {
-
-                barcodeModal.classList.remove(
-                    'active'
-                );
-
-                barcodeModal.setAttribute(
-                    'aria-hidden',
-                    'true'
-                );
-
-            }
-
-
-            document.body.classList.remove(
-                'scanner-open'
-            );
-
-
-            // Llevar el cursor al campo.
-            if (numeroSerie) {
-
-                numeroSerie.focus();
-
-            }
-
-        }, 500);
-
+        return Promise.resolve();
     }
-
-
-
-    // ------------------------------------------------------------
-    // Errores normales de lectura
-    // ------------------------------------------------------------
-
-    function onBarcodeScanError(errorMessage) {
-
-        /*
-         * Este evento se ejecuta constantemente mientras la cámara
-         * está buscando un código.
-         *
-         * No mostramos errores al usuario porque es normal que
-         * existan muchos frames donde todavía no se haya detectado
-         * ningún código.
-         */
-
-    }
-
-
-
-    // ------------------------------------------------------------
-    // Detener cámara
-    // ------------------------------------------------------------
-
-    async function stopBarcodeScanner() {
-
-        if (!html5QrCode) {
-
-            scannerRunning = false;
-
-            return;
-
-        }
-
-
-        try {
-
-            if (scannerRunning) {
-
-                await html5QrCode.stop();
-
-            }
-
-        } catch (error) {
-
-            console.warn(
-                'Error deteniendo cámara:',
-                error
-            );
-
-        }
-
-
-        try {
-
-            html5QrCode.clear();
-
-        } catch (error) {
-
-            console.warn(
-                'Error limpiando lector:',
-                error
-            );
-
-        }
-
-
-        html5QrCode = null;
-
-        scannerRunning = false;
-
-        scannerStarting = false;
-
-
-        if (barcodeReader) {
-
-            barcodeReader.innerHTML = '';
-
-        }
-
-    }
-
-
-
-    // ------------------------------------------------------------
-    // Eventos botones
-    // ------------------------------------------------------------
-
-    if (btnScanBarcode) {
-
-        btnScanBarcode.addEventListener(
-            'click',
-            function() {
-
-                openScannerModal();
-
-            }
-        );
-
-    }
-
-
-    if (btnCloseScanner) {
-
-        btnCloseScanner.addEventListener(
-            'click',
-            function() {
-
-                closeScannerModal();
-
-            }
-        );
-
-    }
-
-
-    if (btnCancelScanner) {
-
-        btnCancelScanner.addEventListener(
-            'click',
-            function() {
-
-                closeScannerModal();
-
-            }
-        );
-
-    }
-
-
-
-    // ------------------------------------------------------------
-    // Cerrar con ESC
-    // ------------------------------------------------------------
-
-    document.addEventListener(
-        'keydown',
-        function(event) {
-
-            if (
-                event.key === 'Escape' &&
-                barcodeModal &&
-                barcodeModal.classList.contains(
-                    'active'
-                )
-            ) {
-
-                closeScannerModal();
-
-            }
-
-        }
-    );
-
-
-
-    // ============================================================
-    // 7. VALIDACIÓN PREVIA AL ENVÍO
-    // ============================================================
-
-    const form =
-        document.getElementById(
-            'inventory-form'
-        );
-
-
-    if (form) {
-
-        form.addEventListener(
-            'submit',
-            function(event) {
-
-                if (
-                    inputAnexo &&
-                    inputAnexo.value.length !== 4
-                ) {
-
-                    event.preventDefault();
-
-
-                    alert(
-                        'El anexo debe tener exactamente 4 dígitos.'
-                    );
-
-
-                    inputAnexo.focus();
-
-                    return;
-
-                }
-
-            }
-        );
-
-    }
-
-
-
-    // ============================================================
-    // 8. DETENER CÁMARA SI EL USUARIO ABANDONA LA PÁGINA
-    // ============================================================
-
-    window.addEventListener(
-        'beforeunload',
-        function() {
-
-            if (html5QrCode) {
-
-                try {
-
-                    html5QrCode.stop();
-
-                } catch (error) {
-
-                    console.warn(error);
-
-                }
-
-            }
-
-        }
-    );
-
 });

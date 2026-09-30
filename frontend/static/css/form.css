@@ -1004,3 +1004,6 @@ body.scanner-open {
     }
 
 }
+.is-hidden {
+    display: none !important;
+}
