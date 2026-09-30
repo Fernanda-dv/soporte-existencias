@@ -774,43 +774,21 @@ document.addEventListener('DOMContentLoaded', function () {
     // 7. VALIDACIÓN PREVIA AL ENVÍO
     // ============================================================
 
-    const form =
-        document.getElementById(
-            'inventory-form'
-        );
+    const form = document.getElementById('inventory-form');
 
-
-    if (form) {
-
-        form.addEventListener(
-            'submit',
-            function(event) {
-
-                if (
-                    inputAnexo &&
-                    inputAnexo.value.length !== 4
-                ) {
-
-                    event.preventDefault();
-
-
-                    alert(
-                        'El anexo debe tener exactamente 4 dígitos.'
-                    );
-
-
-                    inputAnexo.focus();
-
-                    return;
-
-                }
-
-            }
-        );
-
-    }
-
-
+if (form) {
+    form.addEventListener('submit', function(event) {
+        const valAnexo = inputAnexo ? inputAnexo.value.trim() : '';
+        
+        // Se valida ÚNICAMENTE si el usuario ingresó algún valor
+        if (valAnexo !== '' && valAnexo.length !== 4) {
+            event.preventDefault();
+            alert('Si ingresa un anexo, debe tener exactamente 4 dígitos.');
+            inputAnexo.focus();
+            return;
+        }
+    });
+}
 
     // ============================================================
     // 8. DETENER CÁMARA SI EL USUARIO ABANDONA LA PÁGINA
