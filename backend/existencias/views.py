@@ -1,13 +1,9 @@
 import csv
-import re
-from functools import wraps
-
-from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db import transaction, IntegrityError
+from django.db import transaction, IntegrityError, models
+from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -19,35 +15,6 @@ from catalogos.models import (
     MarcaImpresora, ModeloImpresora,
     MemoriaRAM, Disco, Procesador, SistemaOperativo, PulgadasMonitor, EstadoImpresora
 )
-from .models import Equipo, Monitor, Funcionario, ImpresoraRegistro
-
-ANEXO_RE = re.compile(r'^\d{4}$')
-ERRORES_DATOS = (IntegrityError, ValueError, ValidationError)
-
-
-def _entero(valor, defecto=0):
-    """Convierte a entero sin provocar un error 500 si el navegador envía basura."""
-    try:
-        return int(valor)
-    except (TypeError, ValueError):
-        return defecto
-
-
-def _fecha_local(fecha):
-    """Las fechas se guardan en UTC; en las exportaciones se muestran en hora de Chile."""
-    return timezone.localtime(fecha).strftime("%d/%m/%Y %H:%M")
-
-
-def _validar_funcionario(request, nombre, anexo):
-    """Validaciones mínimas del lado servidor (el navegador se puede saltar las de JavaScript)."""
-    ok = True
-    if not nombre:
-        messages.error(request, "Debe ingresar el nombre del funcionario.")
-        ok = False
-    if not ANEXO_RE.match(anexo or ''):
-        messages.error(request, "El anexo debe ser un número de 4 dígitos.")
-        ok = False
-    return ok
 
 
 def es_admin(user):
@@ -55,8 +22,11 @@ def es_admin(user):
     return user.is_superuser or user.is_staff
 
 
+# ==========================================
+# 1. REGISTRO Y EDICIÓN DE EQUIPOS
+# ==========================================
+
 @login_required
-@require_http_methods(["GET", "POST"])
 def ingresar_equipo(request):
     if request.method == 'POST':
         # Datos Funcionario
@@ -73,25 +43,43 @@ def ingresar_equipo(request):
         num_serie = request.POST.get('numero_serie', '').strip() or None
         num_inventario = request.POST.get('numero_inventario', '').strip() or None
 
-        # Validación: Obligatorio al menos uno de los dos
+        # Datos Periféricos
+        tiene_monitor = request.POST.get('tiene_monitor') == 'si'
+        cant_monitores = int(request.POST.get('cantidad_monitores', 0)) if tiene_monitor else 0
+        tiene_impresora = request.POST.get('tiene_impresora') == 'si'
+
+        # Validaciones de Negocio
+        errores = []
+
+        if not marca_id or not modelo_id:
+            errores.append("Debe seleccionar la Marca y el Modelo del equipo.")
+
         if not num_serie and not num_inventario:
-            messages.error(request, "Debe ingresar al menos el Número de Serie o el Número de Inventario.")
-        elif num_serie and Equipo.objects.filter(numero_serie=num_serie).exists():
-            messages.error(request, f"El N° de Serie '{num_serie}' ya está registrado.")
-        elif num_inventario and Equipo.objects.filter(numero_inventario=num_inventario).exists():
-            messages.error(request, f"El N° de Inventario '{num_inventario}' ya está registrado.")
+            errores.append("Debe ingresar al menos el Número de Serie o el Número de Inventario del equipo.")
+
+        if tiene_monitor:
+            if cant_monitores < 1:
+                errores.append("Debe indicar la cantidad de monitores.")
+            for i in range(1, cant_monitores + 1):
+                pulgadas = request.POST.get(f'monitor{i}_pulgadas')
+                m_ns = request.POST.get(f'monitor{i}_numero_serie', '').strip()
+                m_ni = request.POST.get(f'monitor{i}_numero_inventario', '').strip()
+                if not pulgadas:
+                    errores.append(f"Debe seleccionar las pulgadas para la Pantalla {i}.")
+                if not m_ns and not m_ni:
+                    errores.append(f"Para la Pantalla {i}, debe ingresar al menos el N° de Serie o el N° de Inventario.")
+
+        if tiene_impresora:
+            imp_ns = request.POST.get('impresora_numero_serie', '').strip()
+            imp_ni = request.POST.get('impresora_numero_inventario', '').strip()
+            if not imp_ns and not imp_ni:
+                errores.append("Para la impresora del equipo, debe ingresar al menos el N° de Serie o el N° de Inventario.")
+
+        if errores:
+            for err in errores:
+                messages.error(request, err)
         else:
             try:
-                ram_id = request.POST.get('ram')
-                disco_id = request.POST.get('disco')
-                procesador_id = request.POST.get('procesador')
-                so_id = request.POST.get('sistema_operativo')
-
-                tiene_monitor = request.POST.get('tiene_monitor') == 'si'
-                cant_monitores = int(request.POST.get('cantidad_monitores', 0)) if tiene_monitor else 0
-                tiene_impresora = request.POST.get('tiene_impresora') == 'si'
-                tipo_impresora_id = request.POST.get('tipo_impresora') if tiene_impresora else None
-
                 with transaction.atomic():
                     funcionario = Funcionario.objects.create(
                         nombre=nombre_func,
@@ -137,7 +125,7 @@ def ingresar_equipo(request):
                 messages.success(request, "Equipo registrado correctamente.")
                 return redirect('ver_equipos')
             except IntegrityError:
-                messages.error(request, "Ocurrió un error al registrar el equipo.")
+                messages.error(request, "El N° de Serie o N° de Inventario ya se encuentra registrado en el sistema.")
 
     context = {
         'direcciones': Direccion.objects.all(),
@@ -160,52 +148,93 @@ def ingresar_equipo(request):
 
 
 @login_required
-@solo_admin
-@require_http_methods(["GET", "POST"])
 def editar_equipo(request, equipo_id):
+    if not es_admin(request.user):
+        messages.error(request, "No tiene permisos para editar registros.")
+        return redirect('ver_equipos')
+
     equipo = get_object_or_404(Equipo, id=equipo_id)
     funcionario = equipo.funcionario
 
     if request.method == 'POST':
-        with transaction.atomic():
-            funcionario.nombre = request.POST.get('funcionario_nombre', '').strip().upper()
-            funcionario.direccion_id = request.POST.get('direccion')
-            funcionario.departamento_id = request.POST.get('departamento')
-            funcionario.anexo = request.POST.get('anexo', '').strip()
-            funcionario.cargo_id = request.POST.get('cargo')
-            funcionario.save()
+        nombre_func = request.POST.get('funcionario_nombre', '').strip().upper()
+        num_serie = request.POST.get('numero_serie', '').strip() or None
+        num_inventario = request.POST.get('numero_inventario', '').strip() or None
 
-            equipo.tipo_id = request.POST.get('tipo_equipo')
-            equipo.numero_serie = request.POST.get('numero_serie', '').strip() or None
-            equipo.numero_inventario = request.POST.get('numero_inventario', '').strip() or None
-            equipo.ram_id = request.POST.get('ram')
-            equipo.disco_id = request.POST.get('disco')
-            equipo.procesador_id = request.POST.get('procesador')
-            equipo.sistema_operativo_id = request.POST.get('sistema_operativo')
+        tiene_monitor = request.POST.get('tiene_monitor') == 'si'
+        cant_monitores = int(request.POST.get('cantidad_monitores', 0)) if tiene_monitor else 0
+        tiene_impresora = request.POST.get('tiene_impresora') == 'si'
 
-            tiene_monitor = request.POST.get('tiene_monitor') == 'si'
-            tiene_impresora = request.POST.get('tiene_impresora') == 'si'
-            equipo.tiene_monitor = tiene_monitor
-            equipo.tiene_impresora = tiene_impresora
-            equipo.tipo_impresora_id = request.POST.get('tipo_impresora') if tiene_impresora else None
-            equipo.save()
+        errores = []
 
-            equipo.monitores.all().delete()
-            if tiene_monitor:
-                cant_monitores = int(request.POST.get('cantidad_monitores', 0))
-                if cant_monitores >= 1 and request.POST.get('monitor1_pulgadas'):
-                    Monitor.objects.create(
-                        equipo=equipo, pantalla_numero=1,
-                        pulgadas_id=request.POST.get('monitor1_pulgadas'),
-                        hdmi=request.POST.get('monitor1_hdmi') in ['True', 'on', 'true']
-                    )
-                if cant_monitores == 2 and request.POST.get('monitor2_pulgadas'):
-                    Monitor.objects.create(
-                        equipo=equipo, pantalla_numero=2,
-                        pulgadas_id=request.POST.get('monitor2_pulgadas'),
-                        hdmi=request.POST.get('monitor2_hdmi') in ['True', 'on', 'true']
-                    )
-        return redirect('ver_equipos')
+        if not request.POST.get('marca') or not request.POST.get('modelo'):
+            errores.append("Debe seleccionar la Marca y el Modelo del equipo.")
+
+        if not num_serie and not num_inventario:
+            errores.append("Debe ingresar al menos el N° de Serie o N° de Inventario del equipo.")
+
+        if tiene_monitor:
+            for i in range(1, cant_monitores + 1):
+                m_ns = request.POST.get(f'monitor{i}_numero_serie', '').strip()
+                m_ni = request.POST.get(f'monitor{i}_numero_inventario', '').strip()
+                if not m_ns and not m_ni:
+                    errores.append(f"Para la Pantalla {i}, debe ingresar al menos el N° de Serie o el N° de Inventario.")
+
+        if tiene_impresora:
+            imp_ns = request.POST.get('impresora_numero_serie', '').strip()
+            imp_ni = request.POST.get('impresora_numero_inventario', '').strip()
+            if not imp_ns and not imp_ni:
+                errores.append("Para la impresora del equipo, debe ingresar al menos el N° de Serie o N° de Inventario.")
+
+        if errores:
+            for err in errores:
+                messages.error(request, err)
+        else:
+            try:
+                with transaction.atomic():
+                    funcionario.nombre = nombre_func
+                    funcionario.direccion_id = request.POST.get('direccion')
+                    funcionario.departamento_id = request.POST.get('departamento')
+                    funcionario.anexo = request.POST.get('anexo', '').strip() or None
+                    funcionario.cargo_id = request.POST.get('cargo')
+                    funcionario.save()
+
+                    equipo.tipo_id = request.POST.get('tipo_equipo')
+                    equipo.marca_id = request.POST.get('marca')
+                    equipo.modelo_id = request.POST.get('modelo')
+                    equipo.numero_serie = num_serie
+                    equipo.numero_inventario = num_inventario
+                    equipo.ram_id = request.POST.get('ram')
+                    equipo.disco_id = request.POST.get('disco')
+                    equipo.procesador_id = request.POST.get('procesador')
+                    equipo.sistema_operativo_id = request.POST.get('sistema_operativo')
+                    equipo.tiene_monitor = tiene_monitor
+                    equipo.tiene_impresora = tiene_impresora
+
+                    equipo.marca_impresora_id = request.POST.get('impresora_marca') or None if tiene_impresora else None
+                    equipo.modelo_impresora_id = request.POST.get('impresora_modelo') or None if tiene_impresora else None
+                    equipo.numero_serie_impresora = request.POST.get('impresora_numero_serie', '').strip() or None if tiene_impresora else None
+                    equipo.numero_inventario_impresora = request.POST.get('impresora_numero_inventario', '').strip() or None if tiene_impresora else None
+                    equipo.save()
+
+                    equipo.monitores.all().delete()
+                    if tiene_monitor:
+                        for i in range(1, cant_monitores + 1):
+                            Monitor.objects.create(
+                                equipo=equipo,
+                                pantalla_numero=i,
+                                pulgadas_id=request.POST.get(f'monitor{i}_pulgadas'),
+                                hdmi=request.POST.get(f'monitor{i}_hdmi') in ['True', 'on', 'true'],
+                                marca_id=request.POST.get(f'monitor{i}_marca') or None,
+                                modelo_id=request.POST.get(f'monitor{i}_modelo') or None,
+                                numero_serie=request.POST.get(f'monitor{i}_numero_serie', '').strip() or None,
+                                numero_inventario=request.POST.get(f'monitor{i}_numero_inventario', '').strip() or None,
+                            )
+
+                messages.success(request, "Registro de equipo actualizado correctamente.")
+                return redirect('ver_equipos')
+            except IntegrityError:
+                messages.error(request, "El N° de Serie o N° de Inventario ya pertenece a otro registro.")
 
     monitor1 = equipo.monitores.filter(pantalla_numero=1).first()
     monitor2 = equipo.monitores.filter(pantalla_numero=2).first()
@@ -406,7 +435,7 @@ def exportar_excel(request):
             imp_ni = eq.numero_inventario_impresora or "N/A"
             imp_str = f"[{imp_marca} {imp_mod}] Serie: {imp_ns} | Inv: {imp_ni}"
 
-        ws.append([celda_segura(v) for v in [
+        ws.append([
             eq.funcionario.nombre,
             eq.funcionario.direccion.nombre,
             eq.funcionario.departamento.nombre,
@@ -421,14 +450,11 @@ def exportar_excel(request):
             eq.disco.tipo,
             eq.procesador.nombre,
             eq.sistema_operativo.tipo,
-            "Sí" if eq.tiene_monitor else "No",
-            cant_mon if eq.tiene_monitor else 0,
-            detalle_mon,
-            "Sí" if eq.tiene_impresora else "No",
-            eq.tipo_impresora.nombre if eq.tiene_impresora and eq.tipo_impresora else "N/A",
+            " // ".join(mon_str) if mon_str else "No",
+            imp_str,
             eq.fecha_creacion.strftime("%d/%m/%Y %H:%M"),
             eq.tecnico.get_full_name() or eq.tecnico.username
-        ]])
+        ])
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="inventario_equipos_maipu.xlsx"'
@@ -488,7 +514,7 @@ def exportar_csv(request):
             imp_ni = eq.numero_inventario_impresora or "N/A"
             imp_str = f"[{imp_marca} {imp_mod}] Serie: {imp_ns} | Inv: {imp_ni}"
 
-        writer.writerow([celda_segura(v) for v in [
+        writer.writerow([
             eq.funcionario.nombre,
             eq.funcionario.direccion.nombre,
             eq.funcionario.departamento.nombre,
@@ -503,37 +529,13 @@ def exportar_csv(request):
             eq.disco.tipo,
             eq.procesador.nombre,
             eq.sistema_operativo.tipo,
-            "Sí" if eq.tiene_monitor else "No",
-            cant_mon if eq.tiene_monitor else 0,
-            detalle_mon,
-            "Sí" if eq.tiene_impresora else "No",
-            eq.tipo_impresora.nombre if eq.tiene_impresora and eq.tipo_impresora else "N/A",
+            " // ".join(mon_str) if mon_str else "No",
+            imp_str,
             eq.fecha_creacion.strftime("%d/%m/%Y %H:%M"),
             eq.tecnico.get_full_name() or eq.tecnico.username
-        ]])
+        ])
 
     return response
-
-
-@login_required
-def ingresar_impresora(request):
-    if request.method == 'POST':
-        ImpresoraRegistro.objects.create(
-            direccion_id=request.POST.get('direccion'),
-            departamento_id=request.POST.get('departamento'),
-            tipo_impresora_id=request.POST.get('tipo_impresora'),
-            estado_id=request.POST.get('estado'),
-            tecnico=request.user
-        )
-        return redirect('ver_equipos')
-
-    context = {
-        'direcciones': Direccion.objects.all(),
-        'departamentos': Departamento.objects.all(),
-        'tipos_impresora': TipoImpresora.objects.all(),
-        'estados_impresora': EstadoImpresora.objects.all(),
-    }
-    return render(request, 'form_impresora.html', context)
 
 @login_required
 def exportar_impresoras_excel(request):
@@ -567,14 +569,13 @@ def exportar_impresoras_excel(request):
     headers = ["Dirección", "Departamento", "Marca", "Modelo", "N° Serie", "N° Inventario", "Estado", "Fecha Creación", "Técnico Registrador"]
     ws.append(headers)
 
-    # Aplicar estilos a la primera fila (encabezados)
-    for cell in ws[4]:
+    for cell in ws:
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = Alignment(horizontal='center', vertical='center')
 
     for imp in impresoras:
-        ws.append([celda_segura(v) for v in [
+        ws.append([
             imp.direccion.nombre if imp.direccion else "N/A",
             imp.departamento.nombre if imp.departamento else "N/A",
             imp.marca.nombre if imp.marca else "N/A",
@@ -582,9 +583,9 @@ def exportar_impresoras_excel(request):
             imp.numero_serie or "N/A",
             imp.numero_inventario or "N/A",
             imp.estado.nombre if imp.estado else "N/A",
-            _fecha_local(imp.fecha_creacion),
+            imp.fecha_creacion.strftime("%d/%m/%Y %H:%M"),
             imp.tecnico.get_full_name() or imp.tecnico.username
-        ]])
+        ])
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="inventario_impresoras_maipu.xlsx"'
@@ -621,7 +622,7 @@ def exportar_impresoras_csv(request):
     writer.writerow(["Dirección", "Departamento", "Marca", "Modelo", "N° Serie", "N° Inventario", "Estado", "Fecha Creación", "Técnico Registrador"])
 
     for imp in impresoras:
-        writer.writerow([celda_segura(v) for v in [
+        writer.writerow([
             imp.direccion.nombre if imp.direccion else "N/A",
             imp.departamento.nombre if imp.departamento else "N/A",
             imp.marca.nombre if imp.marca else "N/A",
@@ -629,8 +630,8 @@ def exportar_impresoras_csv(request):
             imp.numero_serie or "N/A",
             imp.numero_inventario or "N/A",
             imp.estado.nombre if imp.estado else "N/A",
-            _fecha_local(imp.fecha_creacion),
+            imp.fecha_creacion.strftime("%d/%m/%Y %H:%M"),
             imp.tecnico.get_full_name() or imp.tecnico.username
-        ]])
+        ])
 
     return response

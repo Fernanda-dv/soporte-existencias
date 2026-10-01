@@ -8,7 +8,7 @@ class EquipoIngresoForm(forms.Form):
     funcionario_nombre = forms.CharField(max_length=150, required=True)
     direccion = forms.ModelChoiceField(queryset=Direccion.objects.all(), required=True)
     departamento = forms.ModelChoiceField(queryset=Departamento.objects.all(), required=True)
-    anexo = forms.CharField(max_length=4, min_length=4, required=True)
+    anexo = forms.CharField(max_length=4, required=False)
     cargo = forms.ModelChoiceField(queryset=Cargo.objects.all(), required=True)
 
     # --- EQUIPO (Obligatorio) ---
@@ -62,3 +62,9 @@ class EquipoIngresoForm(forms.Form):
                 self.add_error('tipo_impresora', 'Seleccione el tipo de impresora.')
 
         return cleaned_data
+
+    def clean_anexo(self):
+        anexo = self.cleaned_data.get('anexo', '').strip()
+        if anexo and len(anexo) != 4:
+            raise forms.ValidationError('El anexo debe tener exactamente 4 dígitos.')
+        return anexo or None

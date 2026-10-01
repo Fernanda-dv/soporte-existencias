@@ -9,9 +9,12 @@
     <!-- Tipografía Oficial Rubik y FontAwesome -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Lector de Código de Barras y QR Local -->
+    <script src="{% static 'js/html5-qrcode.min.js' %}"></script>
 
-    <!-- CSS de Impresoras (Sin animaciones para móviles/tablets) -->
-    <link rel="stylesheet" href="{% static 'css/form_impresora.css' %}">
+    <!-- CSS del Formulario -->
+    <link rel="stylesheet" href="{% static 'css/form.css' %}">
 </head>
 <body class="form-body">
 
@@ -82,7 +85,7 @@
             <section class="form-card">
                 <div class="card-header">
                     <i class="fa-solid fa-building"></i>
-                    <h3>Ubicación y Detalle del Equipo</h3>
+                    <h3>Detalle de la Impresora</h3>
                 </div>
 
                 <div class="form-grid">
@@ -167,11 +170,6 @@
                         </select>
                     </div>
                 </div>
-
-                <small class="input-help" style="margin-top: 15px; display: block;">
-                    <i class="fa-solid fa-circle-info"></i>
-                    Debe ingresar obligatoriamente al menos uno de los dos identificadores (N° de Serie o N° de Inventario).
-                </small>
             </section>
 
             <!-- BOTONES DE ACCIÓN -->
