@@ -2,8 +2,11 @@ import csv
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.db import transaction, IntegrityError, models
 from django.http import HttpResponse
+from django.utils import timezone
+from django.views.decorators.http import require_http_methods
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 
@@ -17,6 +20,32 @@ from catalogos.models import (
 )
 
 
+from config.seguridad import celda_segura
+
+# Errores que puede provocar un formulario manipulado (IDs que no existen o no numéricos):
+# se informan al usuario en vez de producir un error 500.
+ERRORES_DATOS = (IntegrityError, ValueError, ValidationError)
+MAX_MONITORES = 2  # el formulario ofrece 1 o 2 pantallas
+
+
+def _cantidad_monitores(valor):
+    """Cantidad de monitores enviada por el navegador, acotada a 0..MAX_MONITORES."""
+    try:
+        return max(0, min(int(valor), MAX_MONITORES))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _fecha_local(fecha):
+    """Las fechas se guardan en UTC; en las exportaciones se muestran en hora de Chile."""
+    return timezone.localtime(fecha).strftime("%d/%m/%Y %H:%M")
+
+
+def _fila_segura(valores):
+    """Evita que un texto como =HYPERLINK(...) se ejecute como fórmula al abrir Excel/CSV."""
+    return [celda_segura(v) for v in valores]
+
+
 def es_admin(user):
     """Verifica si el usuario es superusuario o miembro del personal de administración."""
     return user.is_superuser or user.is_staff
@@ -27,6 +56,7 @@ def es_admin(user):
 # ==========================================
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def ingresar_equipo(request):
     if request.method == 'POST':
         # Datos Funcionario
@@ -45,7 +75,7 @@ def ingresar_equipo(request):
 
         # Datos Periféricos
         tiene_monitor = request.POST.get('tiene_monitor') == 'si'
-        cant_monitores = int(request.POST.get('cantidad_monitores', 0)) if tiene_monitor else 0
+        cant_monitores = _cantidad_monitores(request.POST.get('cantidad_monitores')) if tiene_monitor else 0
         tiene_impresora = request.POST.get('tiene_impresora') == 'si'
 
         # Validaciones de Negocio
@@ -126,6 +156,8 @@ def ingresar_equipo(request):
                 return redirect('ver_equipos')
             except IntegrityError:
                 messages.error(request, "El N° de Serie o N° de Inventario ya se encuentra registrado en el sistema.")
+            except (ValueError, ValidationError):
+                messages.error(request, "Hay datos inválidos en el formulario. Revise las listas seleccionadas.")
 
     context = {
         'direcciones': Direccion.objects.all(),
@@ -148,6 +180,7 @@ def ingresar_equipo(request):
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def editar_equipo(request, equipo_id):
     if not es_admin(request.user):
         messages.error(request, "No tiene permisos para editar registros.")
@@ -162,7 +195,7 @@ def editar_equipo(request, equipo_id):
         num_inventario = request.POST.get('numero_inventario', '').strip() or None
 
         tiene_monitor = request.POST.get('tiene_monitor') == 'si'
-        cant_monitores = int(request.POST.get('cantidad_monitores', 0)) if tiene_monitor else 0
+        cant_monitores = _cantidad_monitores(request.POST.get('cantidad_monitores')) if tiene_monitor else 0
         tiene_impresora = request.POST.get('tiene_impresora') == 'si'
 
         errores = []
@@ -235,6 +268,8 @@ def editar_equipo(request, equipo_id):
                 return redirect('ver_equipos')
             except IntegrityError:
                 messages.error(request, "El N° de Serie o N° de Inventario ya pertenece a otro registro.")
+            except (ValueError, ValidationError):
+                messages.error(request, "Hay datos inválidos en el formulario. Revise las listas seleccionadas.")
 
     monitor1 = equipo.monitores.filter(pantalla_numero=1).first()
     monitor2 = equipo.monitores.filter(pantalla_numero=2).first()
@@ -268,6 +303,7 @@ def editar_equipo(request, equipo_id):
 # ==========================================
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def ingresar_impresora(request):
     if request.method == 'POST':
         direccion_id = request.POST.get('direccion')
@@ -281,18 +317,22 @@ def ingresar_impresora(request):
         if not ns and not ni:
             messages.error(request, "Debe ingresar al menos el N° de Serie o el N° de Inventario de la impresora.")
         else:
-            ImpresoraRegistro.objects.create(
-                direccion_id=direccion_id,
-                departamento_id=departamento_id,
-                marca_id=marca_id or None,
-                modelo_id=modelo_id or None,
-                numero_serie=ns,
-                numero_inventario=ni,
-                estado_id=estado_id,
-                tecnico=request.user
-            )
-            messages.success(request, "Impresora registrada exitosamente.")
-            return redirect('ver_equipos')
+            try:
+                with transaction.atomic():
+                    ImpresoraRegistro.objects.create(
+                        direccion_id=direccion_id,
+                        departamento_id=departamento_id,
+                        marca_id=marca_id or None,
+                        modelo_id=modelo_id or None,
+                        numero_serie=ns,
+                        numero_inventario=ni,
+                        estado_id=estado_id,
+                        tecnico=request.user
+                    )
+                messages.success(request, "Impresora registrada exitosamente.")
+                return redirect('ver_equipos')
+            except ERRORES_DATOS:
+                messages.error(request, "Faltan datos obligatorios (Dirección, Departamento o Estado) o hay datos inválidos.")
 
     # Contexto específico para form_impresora.html con sólo MarcaImpresora y ModeloImpresora
     context = {
@@ -435,7 +475,7 @@ def exportar_excel(request):
             imp_ni = eq.numero_inventario_impresora or "N/A"
             imp_str = f"[{imp_marca} {imp_mod}] Serie: {imp_ns} | Inv: {imp_ni}"
 
-        ws.append([
+        ws.append(_fila_segura([
             eq.funcionario.nombre,
             eq.funcionario.direccion.nombre,
             eq.funcionario.departamento.nombre,
@@ -452,9 +492,9 @@ def exportar_excel(request):
             eq.sistema_operativo.tipo,
             " // ".join(mon_str) if mon_str else "No",
             imp_str,
-            eq.fecha_creacion.strftime("%d/%m/%Y %H:%M"),
+            _fecha_local(eq.fecha_creacion),
             eq.tecnico.get_full_name() or eq.tecnico.username
-        ])
+        ]))
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="inventario_equipos_maipu.xlsx"'
@@ -483,7 +523,9 @@ def exportar_csv(request):
             models.Q(numero_inventario__icontains=q_eq)
         ).distinct()
 
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    # utf-8 + BOM escrito UNA vez: con charset=utf-8-sig Django repetía el BOM al inicio de cada fila.
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response.write('\ufeff')
     response['Content-Disposition'] = 'attachment; filename="inventario_equipos_maipu.csv"'
     writer = csv.writer(response, delimiter=';')
 
@@ -514,7 +556,7 @@ def exportar_csv(request):
             imp_ni = eq.numero_inventario_impresora or "N/A"
             imp_str = f"[{imp_marca} {imp_mod}] Serie: {imp_ns} | Inv: {imp_ni}"
 
-        writer.writerow([
+        writer.writerow(_fila_segura([
             eq.funcionario.nombre,
             eq.funcionario.direccion.nombre,
             eq.funcionario.departamento.nombre,
@@ -531,9 +573,9 @@ def exportar_csv(request):
             eq.sistema_operativo.tipo,
             " // ".join(mon_str) if mon_str else "No",
             imp_str,
-            eq.fecha_creacion.strftime("%d/%m/%Y %H:%M"),
+            _fecha_local(eq.fecha_creacion),
             eq.tecnico.get_full_name() or eq.tecnico.username
-        ])
+        ]))
 
     return response
 
@@ -569,13 +611,13 @@ def exportar_impresoras_excel(request):
     headers = ["Dirección", "Departamento", "Marca", "Modelo", "N° Serie", "N° Inventario", "Estado", "Fecha Creación", "Técnico Registrador"]
     ws.append(headers)
 
-    for cell in ws:
+    for cell in ws[1]:  # fila de encabezados (antes recorría filas y daba error 500)
         cell.font = header_font
         cell.fill = header_fill
         cell.alignment = Alignment(horizontal='center', vertical='center')
 
     for imp in impresoras:
-        ws.append([
+        ws.append(_fila_segura([
             imp.direccion.nombre if imp.direccion else "N/A",
             imp.departamento.nombre if imp.departamento else "N/A",
             imp.marca.nombre if imp.marca else "N/A",
@@ -583,9 +625,9 @@ def exportar_impresoras_excel(request):
             imp.numero_serie or "N/A",
             imp.numero_inventario or "N/A",
             imp.estado.nombre if imp.estado else "N/A",
-            imp.fecha_creacion.strftime("%d/%m/%Y %H:%M"),
+            _fecha_local(imp.fecha_creacion),
             imp.tecnico.get_full_name() or imp.tecnico.username
-        ])
+        ]))
 
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename="inventario_impresoras_maipu.xlsx"'
@@ -615,14 +657,16 @@ def exportar_impresoras_csv(request):
             models.Q(numero_inventario__icontains=q_imp)
         ).distinct()
 
-    response = HttpResponse(content_type='text/csv; charset=utf-8-sig')
+    # utf-8 + BOM escrito UNA vez: con charset=utf-8-sig Django repetía el BOM al inicio de cada fila.
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response.write('\ufeff')
     response['Content-Disposition'] = 'attachment; filename="inventario_impresoras_maipu.csv"'
     writer = csv.writer(response, delimiter=';')
 
     writer.writerow(["Dirección", "Departamento", "Marca", "Modelo", "N° Serie", "N° Inventario", "Estado", "Fecha Creación", "Técnico Registrador"])
 
     for imp in impresoras:
-        writer.writerow([
+        writer.writerow(_fila_segura([
             imp.direccion.nombre if imp.direccion else "N/A",
             imp.departamento.nombre if imp.departamento else "N/A",
             imp.marca.nombre if imp.marca else "N/A",
@@ -630,8 +674,8 @@ def exportar_impresoras_csv(request):
             imp.numero_serie or "N/A",
             imp.numero_inventario or "N/A",
             imp.estado.nombre if imp.estado else "N/A",
-            imp.fecha_creacion.strftime("%d/%m/%Y %H:%M"),
+            _fecha_local(imp.fecha_creacion),
             imp.tecnico.get_full_name() or imp.tecnico.username
-        ])
+        ]))
 
     return response

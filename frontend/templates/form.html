@@ -7,8 +7,9 @@
     <title>{% if equipo %}Editar Equipo{% else %}Ingresar Equipo{% endif %} - Soporte Inventario</title>
 
     <!-- Tipografía Oficial Rubik y FontAwesome -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'vendor/rubik/rubik.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/fontawesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/solid.min.css' %}">
     
     <!-- Lector de Código de Barras y QR Local -->
     <script src="{% static 'js/html5-qrcode.min.js' %}"></script>
