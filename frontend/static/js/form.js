@@ -170,10 +170,12 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (type === 'error') icon = 'fa-circle-exclamation';
         else if (type === 'loading') icon = 'fa-spinner fa-spin';
 
-        scannerStatus.innerHTML = `
-            <i class="fa-solid ${icon}"></i>
-            <span>${message}</span>
-        `;
+        // Se arma con nodos (no innerHTML) para que ningún texto se interprete como HTML.
+        const iconEl = document.createElement('i');
+        iconEl.className = `fa-solid ${icon}`;
+        const textEl = document.createElement('span');
+        textEl.textContent = message;
+        scannerStatus.replaceChildren(iconEl, document.createTextNode(' '), textEl);
 
         scannerStatus.classList.remove('scanner-success', 'scanner-error');
         if (type === 'success') scannerStatus.classList.add('scanner-success');
@@ -252,7 +254,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!cameras || cameras.length === 0) {
                     throw new Error('No se encontró ninguna cámara disponible.');
                 }
-                await html5QrCode.start(cameras.id, config, onBarcodeScanned, onBarcodeScanError);
+                // getCameras() devuelve una LISTA: se usa la cámara trasera si se reconoce por su
+                // nombre; si no, la última (en celulares suele ser la trasera). Antes se usaba
+                // `cameras.id` (undefined) y en notebooks sin cámara trasera el lector fallaba.
+                const trasera = cameras.find(c => /back|rear|trasera|environment/i.test(c.label || ''));
+                const camara = trasera || cameras[cameras.length - 1];
+                await html5QrCode.start(camara.id, config, onBarcodeScanned, onBarcodeScanError);
             }
 
             scannerRunning = true;
